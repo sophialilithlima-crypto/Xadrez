@@ -12,6 +12,8 @@ let botLevel = 'beginner'
 let botThinking = false
 let botTimer = null
 let selectedSquare = null
+let lastMove = null // casas de origem e destino do lance mais recente
+let pendingPromotion = null
 
 const LEVELS = {
   beginner: { label: 'Iniciante', depth: 0 },
@@ -61,6 +63,7 @@ document.body.appendChild(ui)
 function createButton(label, onClick, primary = false) {
   const button = document.createElement('button')
   button.type = 'button'
+  button.className = 'chess-ui-button'
   button.textContent = label
   Object.assign(button.style, {
     border: primary ? '1px solid #d9b66e' : '1px solid #656b75',
@@ -108,6 +111,7 @@ function createOverlay(zIndex = 20) {
 
 function createModalPanel(maxWidth = '650px') {
   const panel = document.createElement('div')
+  panel.className = 'chess-modal-panel'
   Object.assign(panel.style, {
     width: `min(${maxWidth}, 100%)`,
     maxHeight: '88vh',
@@ -125,6 +129,7 @@ function createModalPanel(maxWidth = '650px') {
 }
 
 const topPanel = document.createElement('div')
+topPanel.className = 'chess-top-panel'
 Object.assign(topPanel.style, {
   position: 'absolute',
   top: '16px',
@@ -140,6 +145,7 @@ Object.assign(topPanel.style, {
 ui.appendChild(topPanel)
 
 const title = document.createElement('div')
+title.className = 'chess-title'
 title.textContent = 'XADREZ 3D'
 Object.assign(title.style, {
   fontSize: '20px',
@@ -150,6 +156,7 @@ Object.assign(title.style, {
 topPanel.appendChild(title)
 
 const controls = document.createElement('div')
+controls.className = 'chess-controls'
 Object.assign(controls.style, {
   display: 'flex',
   flexWrap: 'wrap',
@@ -160,6 +167,7 @@ Object.assign(controls.style, {
 topPanel.appendChild(controls)
 
 const turnLabel = document.createElement('div')
+turnLabel.className = 'chess-turn-label'
 Object.assign(turnLabel.style, {
   position: 'absolute',
   top: '76px',
@@ -178,6 +186,7 @@ Object.assign(turnLabel.style, {
 ui.appendChild(turnLabel)
 
 const historyPanel = document.createElement('div')
+historyPanel.className = 'chess-history-panel'
 Object.assign(historyPanel.style, {
   position: 'absolute',
   left: '16px',
@@ -197,6 +206,7 @@ Object.assign(historyPanel.style, {
 ui.appendChild(historyPanel)
 
 const messageLabel = document.createElement('div')
+messageLabel.className = 'chess-message-label'
 Object.assign(messageLabel.style, {
   position: 'absolute',
   right: '16px',
@@ -211,6 +221,37 @@ Object.assign(messageLabel.style, {
   textAlign: 'right',
 })
 ui.appendChild(messageLabel)
+
+// Ajustes responsivos para não sobrepor botões e painéis em telas pequenas.
+const responsiveStyle = document.createElement('style')
+responsiveStyle.textContent = `
+  .chess-top-panel { z-index: 2; }
+  .chess-ui-button:focus-visible { outline: 2px solid #f0cf83; outline-offset: 2px; }
+  .chess-modal-panel h3 { color: #e6c47c; }
+  .chess-modal-panel p { overflow-wrap: anywhere; }
+  @media (max-width: 720px) {
+    .chess-top-panel { top: max(8px, env(safe-area-inset-top)); left: 9px; right: 9px; align-items: flex-start; gap: 7px; }
+    .chess-title { font-size: 16px !important; letter-spacing: 1.5px !important; margin-top: 7px; }
+    .chess-controls { max-width: calc(100vw - 105px); justify-content: flex-end; gap: 5px !important; }
+    .chess-ui-button { padding: 8px 9px !important; font-size: 12px !important; border-radius: 8px !important; }
+    .chess-turn-label { top: auto !important; bottom: 142px !important; max-width: calc(100vw - 20px) !important; white-space: normal !important; width: max-content; font-size: 12px !important; padding: 8px 10px !important; }
+    .chess-history-panel { left: 8px !important; bottom: max(8px, env(safe-area-inset-bottom)) !important; width: calc(50vw - 13px) !important; max-height: 112px !important; padding: 8px !important; font-size: 11px !important; line-height: 1.5 !important; }
+    .chess-message-label { right: 8px !important; bottom: max(8px, env(safe-area-inset-bottom)) !important; width: calc(50vw - 13px) !important; max-width: calc(50vw - 13px) !important; box-sizing: border-box; padding: 8px !important; font-size: 11px !important; line-height: 1.4 !important; }
+    .chess-modal-panel { max-height: 90dvh !important; padding: 18px !important; }
+  }
+  @media (max-width: 420px) {
+    .chess-top-panel { flex-direction: column; }
+    .chess-controls { max-width: 100%; justify-content: flex-start; }
+    .chess-title { margin-top: 0; }
+    .chess-turn-label { bottom: 130px !important; }
+    .chess-history-panel, .chess-message-label { max-height: 96px !important; }
+  }
+  @media (max-height: 520px) {
+    .chess-turn-label { top: auto !important; bottom: 120px !important; }
+    .chess-history-panel, .chess-message-label { max-height: 72px !important; }
+  }
+`
+document.head.appendChild(responsiveStyle)
 
 // ======================================================
 // 3. TELA DE ESCOLHA DO MODO E DA DIFICULDADE
@@ -288,7 +329,10 @@ function showModePicker() {
   cancelBotTimer()
   botThinking = false
   selectedSquare = null
-  clearHighlights()
+  refreshHighlights()
+  finishOverlay.style.display = 'none'
+  promotionOverlay.style.display = 'none'
+  pendingPromotion = null
   modeOverlay.style.display = 'flex'
   levelArea.style.display = 'none'
   modeCards.style.display = 'grid'
@@ -303,7 +347,11 @@ function startGame(mode, level = 'beginner') {
   botLevel = level
   game.reset()
   selectedSquare = null
+  lastMove = null
   clearHighlights()
+  finishOverlay.style.display = 'none'
+  promotionOverlay.style.display = 'none'
+  pendingPromotion = null
   renderPieces()
   modeOverlay.style.display = 'none'
   updateInterface()
@@ -461,6 +509,95 @@ manualOverlay.addEventListener('click', (event) => {
 })
 
 // ======================================================
+// 4.1 AVISO CENTRAL DE FIM DE PARTIDA
+// ======================================================
+
+const finishOverlay = createOverlay(25)
+const finishPanel = createModalPanel('440px')
+Object.assign(finishPanel.style, { textAlign: 'center', padding: 'clamp(24px, 5vw, 38px)' })
+finishOverlay.appendChild(finishPanel)
+
+const finishIcon = document.createElement('div')
+finishIcon.textContent = '♔'
+Object.assign(finishIcon.style, { fontSize: '48px', lineHeight: '1.1', color: '#e6c47c', marginBottom: '12px' })
+finishPanel.appendChild(finishIcon)
+
+const finishTitle = document.createElement('h2')
+Object.assign(finishTitle.style, { fontSize: 'clamp(24px, 5vw, 34px)', margin: '0 0 8px', lineHeight: '1.2' })
+finishPanel.appendChild(finishTitle)
+
+const finishDescription = document.createElement('p')
+Object.assign(finishDescription.style, { color: '#c2c8d1', margin: '0 0 22px' })
+finishPanel.appendChild(finishDescription)
+
+const finishActions = document.createElement('div')
+Object.assign(finishActions.style, { display: 'flex', gap: '10px', justifyContent: 'center', flexWrap: 'wrap' })
+finishPanel.appendChild(finishActions)
+finishActions.appendChild(createButton('Jogar novamente', () => startGame(gameMode, botLevel), true))
+finishActions.appendChild(createButton('Escolher modo', showModePicker))
+
+// ======================================================
+// 4.2 ESCOLHA VISUAL DE PROMOÇÃO DE PEÃO
+// Evita a janela padrão do navegador e funciona em telas móveis.
+// ======================================================
+
+const promotionOverlay = createOverlay(26)
+const promotionPanel = createModalPanel('440px')
+promotionOverlay.appendChild(promotionPanel)
+
+const promotionTitle = document.createElement('h2')
+promotionTitle.textContent = 'Escolha a promoção'
+promotionTitle.style.marginTop = '0'
+promotionPanel.appendChild(promotionTitle)
+
+const promotionDescription = document.createElement('p')
+promotionDescription.textContent = 'Seu peão chegou à última fileira. Escolha a peça que deseja receber.'
+promotionDescription.style.color = '#c2c8d1'
+promotionPanel.appendChild(promotionDescription)
+
+const promotionChoices = document.createElement('div')
+Object.assign(promotionChoices.style, { display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '10px' })
+promotionPanel.appendChild(promotionChoices)
+
+const promotionOptions = [
+  { key: 'q', name: 'Dama', glyph: '♛' },
+  { key: 'r', name: 'Torre', glyph: '♜' },
+  { key: 'b', name: 'Bispo', glyph: '♝' },
+  { key: 'n', name: 'Cavalo', glyph: '♞' },
+]
+
+for (const option of promotionOptions) {
+  const optionButton = document.createElement('button')
+  optionButton.type = 'button'
+  Object.assign(optionButton.style, {
+    border: '1px solid #596272', borderRadius: '12px', padding: '14px 10px',
+    background: '#202733', color: '#f4f1e9', cursor: 'pointer', fontSize: '15px',
+  })
+  const glyph = document.createElement('div')
+  glyph.textContent = option.glyph
+  Object.assign(glyph.style, { fontSize: '34px', lineHeight: '1.1', marginBottom: '6px' })
+  const name = document.createElement('div')
+  name.textContent = option.name
+  name.style.fontWeight = '700'
+  optionButton.append(glyph, name)
+  optionButton.addEventListener('mouseenter', () => { optionButton.style.borderColor = '#d0aa62'; optionButton.style.background = '#2d3746' })
+  optionButton.addEventListener('mouseleave', () => { optionButton.style.borderColor = '#596272'; optionButton.style.background = '#202733' })
+  optionButton.addEventListener('click', () => {
+    if (!pendingPromotion) return
+    const pending = pendingPromotion
+    pendingPromotion = null
+    promotionOverlay.style.display = 'none'
+    completeMove(pending.from, pending.to, option.key)
+  })
+  promotionChoices.appendChild(optionButton)
+}
+
+function openPromotionPicker(from, to) {
+  pendingPromotion = { from, to }
+  promotionOverlay.style.display = 'flex'
+}
+
+// ======================================================
 // 5. ILUMINAÇÃO
 // ======================================================
 
@@ -516,38 +653,106 @@ const pieceStemGeometry = new THREE.CylinderGeometry(0.12, 0.22, 0.35, 24)
 function createPieceMesh(type, color, square) {
   const material = color === 'w' ? whiteMaterial : blackMaterial
   const piece = new THREE.Group()
-  const base = new THREE.Mesh(pieceBaseGeometry, material)
-  base.position.y = 0.16
-  base.castShadow = true
-  piece.add(base)
-  const stem = new THREE.Mesh(pieceStemGeometry, material)
-  stem.position.y = 0.38
-  stem.castShadow = true
-  piece.add(stem)
 
-  let topGeometry
-  switch (type) {
-    case 'p': topGeometry = new THREE.SphereGeometry(0.16, 24, 16); break
-    case 'r': topGeometry = new THREE.CylinderGeometry(0.22, 0.22, 0.25, 8); break
-    case 'n': topGeometry = new THREE.OctahedronGeometry(0.23); break
-    case 'b': topGeometry = new THREE.ConeGeometry(0.2, 0.4, 24); break
-    case 'q': topGeometry = new THREE.SphereGeometry(0.23, 24, 16); break
-    case 'k': topGeometry = new THREE.ConeGeometry(0.18, 0.42, 4); break
-    default: topGeometry = new THREE.SphereGeometry(0.16, 24, 16)
+  // Pequenos detalhes metálicos ajudam a separar visualmente cada peça.
+  const detailMaterial = new THREE.MeshStandardMaterial({
+    color: color === 'w' ? 0xc5a96b : 0x9b7b43,
+    metalness: 0.55,
+    roughness: 0.32,
+  })
+
+  function addMesh(geometry, y, x = 0, z = 0, mat = material) {
+    const mesh = new THREE.Mesh(geometry, mat)
+    mesh.position.set(x, y, z)
+    mesh.castShadow = true
+    mesh.receiveShadow = true
+    piece.add(mesh)
+    return mesh
   }
-  const top = new THREE.Mesh(topGeometry, material)
-  top.position.y = type === 'p' ? 0.62 : 0.72
-  top.castShadow = true
-  piece.add(top)
 
-  if (type === 'k') {
-    const cross = new THREE.Group()
-    const vertical = new THREE.Mesh(new THREE.BoxGeometry(0.055, 0.24, 0.055), material)
-    const horizontal = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.055, 0.055), material)
-    vertical.position.y = 0.96
-    horizontal.position.y = 0.98
-    cross.add(vertical, horizontal)
-    piece.add(cross)
+  // Base comum, com dois níveis para dar aparência de peça torneada.
+  addMesh(new THREE.CylinderGeometry(0.29, 0.34, 0.10, 32), 0.16)
+  addMesh(new THREE.CylinderGeometry(0.25, 0.29, 0.07, 32), 0.245, 0, 0, detailMaterial)
+
+  switch (type) {
+    case 'p': { // Peão: corpo curto e cabeça redonda bem evidente.
+      addMesh(new THREE.CylinderGeometry(0.105, 0.17, 0.28, 24), 0.41)
+      addMesh(new THREE.SphereGeometry(0.145, 24, 18), 0.62)
+      addMesh(new THREE.TorusGeometry(0.115, 0.018, 8, 24), 0.31, 0, 0, detailMaterial)
+      break
+    }
+
+    case 'r': { // Torre: formato de fortaleza e ameias quadradas.
+      addMesh(new THREE.CylinderGeometry(0.17, 0.21, 0.37, 20), 0.47)
+      addMesh(new THREE.CylinderGeometry(0.235, 0.235, 0.10, 24), 0.70)
+      addMesh(new THREE.CylinderGeometry(0.17, 0.17, 0.08, 24), 0.79, 0, 0, detailMaterial)
+      for (let i = 0; i < 6; i++) {
+        const angle = (i / 6) * Math.PI * 2
+        addMesh(new THREE.BoxGeometry(0.105, 0.12, 0.105), 0.86, Math.cos(angle) * 0.17, Math.sin(angle) * 0.17)
+      }
+      break
+    }
+
+    case 'n': { // Cavalo: silhueta de cabeça, focinho, orelha e olho.
+      const horseShape = new THREE.Shape()
+      horseShape.moveTo(-0.17, 0.27)
+      horseShape.lineTo(-0.18, 0.47)
+      horseShape.lineTo(-0.08, 0.62)
+      horseShape.lineTo(-0.11, 0.84)
+      horseShape.lineTo(0.02, 0.76)
+      horseShape.lineTo(0.10, 0.64)
+      horseShape.lineTo(0.21, 0.59)
+      horseShape.lineTo(0.25, 0.49)
+      horseShape.lineTo(0.15, 0.43)
+      horseShape.lineTo(0.04, 0.45)
+      horseShape.lineTo(0.00, 0.27)
+      horseShape.closePath()
+      const horseGeometry = new THREE.ExtrudeGeometry(horseShape, {
+        depth: 0.13,
+        bevelEnabled: true,
+        bevelSegments: 2,
+        steps: 1,
+        bevelSize: 0.025,
+        bevelThickness: 0.025,
+      })
+      horseGeometry.center()
+      const horse = addMesh(horseGeometry, 0.69, 0, 0)
+      horse.rotation.y = -Math.PI / 2
+      // O olho fica na face frontal da cabeça.
+      addMesh(new THREE.SphereGeometry(0.028, 12, 10), 0.80, 0.085, 0.105, detailMaterial)
+      addMesh(new THREE.ConeGeometry(0.055, 0.15, 4), 0.99, -0.065, 0, material)
+      break
+    }
+
+    case 'b': { // Bispo: corpo alto, mitra e corte diagonal característico.
+      addMesh(new THREE.CylinderGeometry(0.105, 0.19, 0.40, 24), 0.47)
+      addMesh(new THREE.SphereGeometry(0.13, 24, 16), 0.71)
+      addMesh(new THREE.ConeGeometry(0.16, 0.30, 24), 0.88)
+      const slit = addMesh(new THREE.BoxGeometry(0.035, 0.20, 0.045), 0.88, 0.015, 0.125, detailMaterial)
+      slit.rotation.z = -0.45
+      break
+    }
+
+    case 'q': { // Rainha: coroa larga com cinco pontas.
+      addMesh(new THREE.CylinderGeometry(0.12, 0.20, 0.43, 24), 0.49)
+      addMesh(new THREE.SphereGeometry(0.16, 24, 16), 0.74)
+      addMesh(new THREE.CylinderGeometry(0.22, 0.18, 0.08, 24), 0.83, 0, 0, detailMaterial)
+      for (let i = 0; i < 5; i++) {
+        const angle = (i / 5) * Math.PI * 2
+        addMesh(new THREE.ConeGeometry(0.055, 0.20, 12), 0.94, Math.cos(angle) * 0.16, Math.sin(angle) * 0.16)
+      }
+      addMesh(new THREE.SphereGeometry(0.065, 16, 12), 1.055, 0, 0, detailMaterial)
+      break
+    }
+
+    case 'k': { // Rei: corpo alto e cruz claramente reconhecível.
+      addMesh(new THREE.CylinderGeometry(0.13, 0.21, 0.48, 24), 0.51)
+      addMesh(new THREE.SphereGeometry(0.15, 24, 16), 0.79)
+      addMesh(new THREE.CylinderGeometry(0.19, 0.16, 0.08, 24), 0.89, 0, 0, detailMaterial)
+      addMesh(new THREE.BoxGeometry(0.065, 0.27, 0.065), 1.055)
+      addMesh(new THREE.BoxGeometry(0.20, 0.065, 0.065), 1.09)
+      break
+    }
   }
 
   const position = squareToPosition(square)
@@ -576,7 +781,9 @@ function renderPieces() {
 const highlightGroup = new THREE.Group()
 scene.add(highlightGroup)
 const moveHighlightMaterial = new THREE.MeshBasicMaterial({ color: 0x20e85a, transparent: true, opacity: 0.65, depthWrite: false })
-const selectedMaterial = new THREE.MeshBasicMaterial({ color: 0x4a90e2, transparent: true, opacity: 0.55, depthWrite: false })
+const selectedMaterial = new THREE.MeshBasicMaterial({ color: 0x4a90e2, transparent: true, opacity: 0.62, depthWrite: false })
+const lastMoveFromMaterial = new THREE.MeshBasicMaterial({ color: 0x8cbd62, transparent: true, opacity: 0.5, depthWrite: false })
+const lastMoveToMaterial = new THREE.MeshBasicMaterial({ color: 0x28e85f, transparent: true, opacity: 0.72, depthWrite: false })
 const highlightGeometry = new THREE.BoxGeometry(0.88, 0.025, 0.88)
 
 function clearHighlights() {
@@ -586,15 +793,38 @@ function clearHighlights() {
 function addHighlight(square, material, kind) {
   const position = squareToPosition(square)
   const highlight = new THREE.Mesh(highlightGeometry, material)
-  highlight.position.set(position.x, 0.115, position.z)
+  const height = kind === 'selected' ? 0.145 : kind === 'move' ? 0.135 : kind === 'last-to' ? 0.12 : 0.116
+  highlight.position.set(position.x, height, position.z)
   highlight.userData = { square, kind }
   highlightGroup.add(highlight)
 }
 
-function showLegalMoves(square) {
+// A casa de destino fica verde; a origem recebe um verde mais suave.
+function drawLastMoveHighlights() {
+  if (!lastMove) return
+  addHighlight(lastMove.from, lastMoveFromMaterial, 'last-from')
+  addHighlight(lastMove.to, lastMoveToMaterial, 'last-to')
+}
+
+function refreshHighlights() {
   clearHighlights()
-  addHighlight(square, selectedMaterial, 'selected')
-  for (const move of game.moves({ square, verbose: true })) addHighlight(move.to, moveHighlightMaterial, 'move')
+  drawLastMoveHighlights()
+  if (!selectedSquare) return
+  addHighlight(selectedSquare, selectedMaterial, 'selected')
+  for (const move of game.moves({ square: selectedSquare, verbose: true })) {
+    addHighlight(move.to, moveHighlightMaterial, 'move')
+  }
+}
+
+function syncLastMoveFromHistory() {
+  const history = game.history({ verbose: true })
+  const move = history.length ? history[history.length - 1] : null
+  lastMove = move ? { from: move.from, to: move.to } : null
+}
+
+function showLegalMoves(square) {
+  selectedSquare = square
+  refreshHighlights()
 }
 
 // ======================================================
@@ -611,8 +841,37 @@ function getGameStatus() {
   return ''
 }
 
+function getEndGameCopy() {
+  if (game.isCheckmate()) {
+    const winner = game.turn() === 'w' ? 'pretas' : 'brancas'
+    if (gameMode === 'bot') {
+      return winner === 'brancas'
+        ? { title: 'Você venceu!', description: 'Xeque-mate! Você conseguiu vencer o robô.' }
+        : { title: 'O robô venceu', description: 'Xeque-mate. Que tal tentar outra estratégia?' }
+    }
+    return { title: `As ${winner} venceram!`, description: 'Xeque-mate: a partida terminou.' }
+  }
+
+  const status = getGameStatus()
+  if (game.isDraw()) return { title: 'Empate!', description: status || 'A partida terminou empatada.' }
+  return { title: 'Fim de partida', description: status || 'A partida terminou.' }
+}
+
+function updateFinishOverlay() {
+  if (!game.isGameOver()) {
+    finishOverlay.style.display = 'none'
+    return
+  }
+  const result = getEndGameCopy()
+  finishTitle.textContent = result.title
+  finishDescription.textContent = result.description
+  finishIcon.textContent = game.isCheckmate() ? '♚' : '½'
+  finishOverlay.style.display = 'flex'
+}
+
 function updateInterface() {
   const status = getGameStatus()
+  updateFinishOverlay()
   if (game.isGameOver()) {
     turnLabel.textContent = status
   } else if (botThinking) {
@@ -788,14 +1047,17 @@ function makeBotMove() {
 
     try {
       const move = chooseBotMove()
-      if (move) game.move({ from: move.from, to: move.to, ...(move.promotion ? { promotion: move.promotion } : {}) })
+      if (move) {
+        game.move({ from: move.from, to: move.to, ...(move.promotion ? { promotion: move.promotion } : {}) })
+        lastMove = { from: move.from, to: move.to }
+      }
     } catch (error) {
       console.error('O robô não conseguiu realizar a jogada:', error)
     }
 
     botThinking = false
     selectedSquare = null
-    clearHighlights()
+    refreshHighlights()
     renderPieces()
     updateInterface()
   }, 1800)
@@ -805,21 +1067,7 @@ function makeBotMove() {
 // 11. MOVIMENTAÇÃO FEITA PELO JOGADOR
 // ======================================================
 
-function makeMove(from, to) {
-  if (game.isGameOver() || botThinking) return
-  if (gameMode === 'bot' && game.turn() !== 'w') return
-
-  const candidateMoves = game.moves({ square: from, verbose: true })
-  const move = candidateMoves.find((item) => item.to === to)
-  if (!move) return
-
-  let promotion
-  if (move.flags.includes('p')) {
-    const answer = window.prompt('Promoção do peão: dama (q), torre (r), bispo (b) ou cavalo (n).', 'q')
-    const choice = (answer || 'q').toLowerCase()
-    promotion = ['q', 'r', 'b', 'n'].includes(choice) ? choice : 'q'
-  }
-
+function completeMove(from, to, promotion) {
   try {
     game.move({ from, to, ...(promotion ? { promotion } : {}) })
   } catch (error) {
@@ -827,12 +1075,30 @@ function makeMove(from, to) {
     return
   }
 
+  lastMove = { from, to }
   selectedSquare = null
-  clearHighlights()
+  refreshHighlights()
   renderPieces()
   updateInterface()
 
   if (gameMode === 'bot' && !game.isGameOver() && game.turn() === 'b') makeBotMove()
+}
+
+function makeMove(from, to) {
+  if (game.isGameOver() || botThinking || promotionOverlay.style.display === 'flex') return
+  if (gameMode === 'bot' && game.turn() !== 'w') return
+
+  const candidateMoves = game.moves({ square: from, verbose: true })
+  const move = candidateMoves.find((item) => item.to === to)
+  if (!move) return
+
+  // A promoção espera a escolha visual da peça, sem usar window.prompt.
+  if (move.flags.includes('p')) {
+    openPromotionPicker(from, to)
+    return
+  }
+
+  completeMove(from, to)
 }
 
 // ======================================================
@@ -864,7 +1130,7 @@ function findSquareHit() {
 }
 
 function handleBoardClick(event) {
-  if (manualOverlay.style.display === 'flex' || modeOverlay.style.display === 'flex') return
+  if (manualOverlay.style.display === 'flex' || modeOverlay.style.display === 'flex' || promotionOverlay.style.display === 'flex' || finishOverlay.style.display === 'flex') return
   if (game.isGameOver() || botThinking) return
   // Quando está contra o robô, o jogador só controla as brancas.
   if (gameMode === 'bot' && game.turn() !== 'w') return
@@ -887,7 +1153,7 @@ function handleBoardClick(event) {
       showLegalMoves(targetSquare)
     } else {
       selectedSquare = null
-      clearHighlights()
+      refreshHighlights()
     }
     return
   }
@@ -901,7 +1167,7 @@ function handleBoardClick(event) {
     }
   }
   selectedSquare = null
-  clearHighlights()
+  refreshHighlights()
 }
 renderer.domElement.addEventListener('pointerdown', handleBoardClick)
 
@@ -927,7 +1193,8 @@ const undoButton = createButton('Desfazer', () => {
   }
 
   selectedSquare = null
-  clearHighlights()
+  syncLastMoveFromHistory()
+  refreshHighlights()
   renderPieces()
   updateInterface()
 })
@@ -940,6 +1207,10 @@ controls.appendChild(createButton('Nova partida', () => {
   botThinking = false
   game.reset()
   selectedSquare = null
+  lastMove = null
+  pendingPromotion = null
+  promotionOverlay.style.display = 'none'
+  finishOverlay.style.display = 'none'
   clearHighlights()
   renderPieces()
   updateInterface()
