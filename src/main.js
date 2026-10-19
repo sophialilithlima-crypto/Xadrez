@@ -753,14 +753,14 @@ function createPieceMesh(type, color, square) {
   const material = color === 'w' ? whiteMaterial : blackMaterial
   const piece = new THREE.Group()
   const detailMaterial = new THREE.MeshStandardMaterial({
-    color: color === 'w' ? 0xbcbcbc : 0x777777,
-    metalness: 0.62,
-    roughness: 0.28,
-  })
-  const shadowMaterial = new THREE.MeshStandardMaterial({
-    color: color === 'w' ? 0xd4c3a4 : 0x303030,
+    color: color === 'w' ? 0xc9c9c9 : 0x555555,
+    metalness: 0.18,
     roughness: 0.32,
-    metalness: 0.12,
+  })
+  const accentMaterial = new THREE.MeshStandardMaterial({
+    color: color === 'w' ? 0xffffff : 0x111111,
+    metalness: 0.04,
+    roughness: 0.25,
   })
 
   function addMesh(geometry, y = 0, x = 0, z = 0, mat = material, rotation = null) {
@@ -772,89 +772,146 @@ function createPieceMesh(type, color, square) {
     piece.add(mesh)
     return mesh
   }
-  function lathe(points, mat = material, segments = 32) {
+  function lathe(points, mat = material, segments = 48) {
     const geometry = new THREE.LatheGeometry(points.map(([r, y]) => new THREE.Vector2(r, y)), segments)
+    geometry.computeVertexNormals()
     return addMesh(geometry, 0, 0, 0, mat)
   }
   function ring(radius, tube, y, mat = detailMaterial) {
-    return addMesh(new THREE.TorusGeometry(radius, tube, 10, 36), y, 0, 0, mat, { x: Math.PI / 2 })
+    return addMesh(new THREE.TorusGeometry(radius, tube, 12, 48), y, 0, 0, mat, { x: Math.PI / 2 })
+  }
+  function sphere(radius, y, x = 0, z = 0, mat = material, width = 28, height = 20) {
+    return addMesh(new THREE.SphereGeometry(radius, width, height), y, x, z, mat)
+  }
+  function cone(radius, height, y, x = 0, z = 0, mat = material, segments = 32) {
+    return addMesh(new THREE.ConeGeometry(radius, height, segments), y, x, z, mat)
   }
 
-  // Base torneada em três níveis, semelhante a um conjunto de xadrez esculpido.
-  addMesh(new THREE.CylinderGeometry(0.30, 0.345, 0.12, 40), 0.16)
-  addMesh(new THREE.CylinderGeometry(0.265, 0.30, 0.075, 40), 0.255, 0, 0, detailMaterial)
-  addMesh(new THREE.CylinderGeometry(0.235, 0.265, 0.055, 40), 0.32, 0, 0, material)
-  ring(0.287, 0.018, 0.205)
+  // Base Staunton comum: pé arredondado, dois filetes e transição torneada.
+  lathe([
+    [0.00, 0.095], [0.22, 0.095], [0.285, 0.105], [0.325, 0.13],
+    [0.345, 0.16], [0.342, 0.185], [0.325, 0.205], [0.292, 0.22],
+    [0.286, 0.238], [0.298, 0.252], [0.294, 0.268], [0.266, 0.282],
+    [0.235, 0.292], [0.218, 0.315], [0.00, 0.315],
+  ])
+  ring(0.315, 0.012, 0.174, detailMaterial)
+  ring(0.287, 0.009, 0.247, accentMaterial)
 
   switch (type) {
-    case 'p': { // Peão: haste estreita e cabeça esférica destacada.
-      lathe([[0.16,.34],[.18,.37],[.16,.41],[.12,.47],[.105,.54],[.12,.59],[.16,.62],[.17,.65],[.13,.68],[.08,.70],[.02,.705]])
-      addMesh(new THREE.SphereGeometry(0.135, 32, 24), 0.79)
-      ring(0.12, 0.012, 0.655, detailMaterial)
+    case 'p': { // Peão: haste fina e cabeça esférica, com gola delicada.
+      lathe([
+        [0.00, 0.29], [0.17, 0.29], [0.19, 0.32], [0.17, 0.35],
+        [0.125, 0.40], [0.095, 0.46], [0.085, 0.52], [0.105, 0.56],
+        [0.14, 0.575], [0.145, 0.595], [0.12, 0.61], [0.00, 0.61],
+      ])
+      sphere(0.135, 0.735, 0, 0, material, 36, 28)
+      ring(0.12, 0.009, 0.61, detailMaterial)
       break
     }
-    case 'r': { // Torre: bloco vertical, gola e ameias grandes claramente quadradas.
-      lathe([[.18,.34],[.205,.39],[.20,.43],[.175,.47],[.175,.78],[.205,.81],[.23,.84],[.23,.91],[.17,.91],[.17,.86],[.145,.86],[.145,.92]])
-      addMesh(new THREE.CylinderGeometry(.225,.225,.055,32), .855, 0, 0, detailMaterial)
-      for (let i=0;i<6;i++) {
-        const a=(i/6)*Math.PI*2
-        addMesh(new THREE.BoxGeometry(.115,.15,.115), .965, Math.cos(a)*.16, Math.sin(a)*.16)
+    case 'r': { // Torre clássica: fuste cilíndrico e coroa com ameias verticais.
+      lathe([
+        [0.00, 0.29], [0.17, 0.29], [0.195, 0.33], [0.17, 0.37],
+        [0.145, 0.41], [0.145, 0.70], [0.16, 0.74], [0.205, 0.77],
+        [0.222, 0.80], [0.222, 0.84], [0.00, 0.84],
+      ])
+      ring(0.205, 0.012, 0.785, detailMaterial)
+      // Aberturas tradicionais da torre; pequenos blocos arredondados em torno do topo.
+      for (let i = 0; i < 6; i++) {
+        const a = (i / 6) * Math.PI * 2
+        const crenel = new THREE.Mesh(new THREE.BoxGeometry(0.105, 0.105, 0.105), material)
+        crenel.position.set(Math.cos(a) * 0.15, 0.89, Math.sin(a) * 0.15)
+        crenel.rotation.y = -a
+        crenel.castShadow = true
+        crenel.receiveShadow = true
+        piece.add(crenel)
       }
       break
     }
-    case 'n': { // Cavalo com pescoço inclinado e cabeça equina em relevo.
-      // Pescoço e crina criam o volume tridimensional antes da silhueta da cabeça.
-      addMesh(new THREE.CylinderGeometry(.105,.17,.43,24), .54, -.015, 0, material, {x:0,z:-.42})
-      addMesh(new THREE.SphereGeometry(.145,24,18), .68, -.04, 0, material)
+    case 'n': { // Cavalo: pescoço inclinado e cabeça esculpida, não um bloco retangular.
+      lathe([
+        [0.00, 0.29], [0.17, 0.29], [0.19, 0.33], [0.15, 0.37],
+        [0.13, 0.41], [0.12, 0.48], [0.145, 0.54], [0.18, 0.59],
+        [0.205, 0.62], [0.18, 0.65], [0.12, 0.66], [0.00, 0.66],
+      ])
+      // Pescoço em diagonal com volume arredondado.
+      addMesh(new THREE.CapsuleGeometry(0.105, 0.35, 8, 20), 0.69, -0.015, 0, material, { x: 0, z: -0.43 })
+      sphere(0.125, 0.83, -0.055, 0.005, material)
+
       const horseShape = new THREE.Shape()
-      horseShape.moveTo(-.16,.49)
-      horseShape.lineTo(-.17,.70)
-      horseShape.lineTo(-.10,.83)
-      horseShape.lineTo(-.13,1.02)
-      horseShape.lineTo(-.055,.96)
-      horseShape.lineTo(.015,.86)
-      horseShape.lineTo(.13,.82)
-      horseShape.lineTo(.22,.74)
-      horseShape.lineTo(.20,.68)
-      horseShape.lineTo(.10,.66)
-      horseShape.lineTo(.035,.70)
-      horseShape.lineTo(.01,.50)
+      horseShape.moveTo(-0.145, 0.57)
+      horseShape.quadraticCurveTo(-0.19, 0.66, -0.135, 0.77)
+      horseShape.lineTo(-0.105, 0.91) // testa
+      horseShape.quadraticCurveTo(-0.095, 0.96, -0.045, 0.93) // orelha
+      horseShape.lineTo(0.005, 0.86)
+      horseShape.quadraticCurveTo(0.065, 0.84, 0.13, 0.80)
+      horseShape.quadraticCurveTo(0.205, 0.77, 0.22, 0.71)
+      horseShape.quadraticCurveTo(0.22, 0.675, 0.175, 0.665) // focinho
+      horseShape.lineTo(0.105, 0.68)
+      horseShape.quadraticCurveTo(0.065, 0.69, 0.045, 0.65)
+      horseShape.lineTo(0.075, 0.56)
+      horseShape.quadraticCurveTo(-0.035, 0.53, -0.145, 0.57)
       horseShape.closePath()
-      const horseGeometry = new THREE.ExtrudeGeometry(horseShape, {depth:.16,bevelEnabled:true,bevelSegments:3,steps:1,bevelSize:.025,bevelThickness:.025,curveSegments:8})
-      const horse = addMesh(horseGeometry, 0, 0, -.08, material)
-      // Olho e narina posicionados na face visível do cavalo.
-      addMesh(new THREE.SphereGeometry(.025,14,10), .77, .105, .105, detailMaterial)
-      addMesh(new THREE.SphereGeometry(.018,12,8), .685, .19, .105, detailMaterial)
-      // Crina estilizada em pequenos relevos no topo do pescoço.
-      for (let i=0;i<3;i++) addMesh(new THREE.ConeGeometry(.035,.12,8), .86-i*.09, -.10+i*.025, -.005, shadowMaterial, {x:0,z:-.38})
-      break
-    }
-    case 'b': { // Bispo: corpo torneado, mitra pontiaguda e fenda diagonal.
-      lathe([[.16,.34],[.19,.39],[.16,.44],[.12,.52],[.105,.64],[.13,.70],[.17,.74],[.15,.78],[.10,.81],[.07,.84]])
-      addMesh(new THREE.SphereGeometry(.115,28,20), .77)
-      addMesh(new THREE.ConeGeometry(.145,.29,32), .94, 0, 0, material)
-      addMesh(new THREE.SphereGeometry(.025,16,12), 1.09, 0, 0, detailMaterial)
-      const slit = addMesh(new THREE.BoxGeometry(.035,.20,.045), .91, .015, .125, detailMaterial, {x:0,z:-.48})
-      break
-    }
-    case 'q': { // Rainha: corpo elegante e coroa com pontas e joias.
-      lathe([[.17,.34],[.20,.39],[.16,.44],[.12,.51],[.105,.63],[.13,.70],[.18,.75],[.20,.79],[.23,.82],[.23,.87],[.18,.88],[.15,.84]])
-      ring(.19,.014,.81,detailMaterial)
-      for (let i=0;i<7;i++) {
-        const a=(i/7)*Math.PI*2
-        const x=Math.cos(a)*.17, z=Math.sin(a)*.17
-        addMesh(new THREE.ConeGeometry(.045,.19,12), .955, x, z, detailMaterial)
-        addMesh(new THREE.SphereGeometry(.025,12,10), .91, x, z, material)
+      const horseGeometry = new THREE.ExtrudeGeometry(horseShape, {
+        depth: 0.12, bevelEnabled: true, bevelSegments: 5, steps: 1,
+        bevelSize: 0.035, bevelThickness: 0.025, curveSegments: 14,
+      })
+      horseGeometry.computeVertexNormals()
+      addMesh(horseGeometry, 0, 0, -0.06, material)
+      // Olho e narina discretos nos dois lados da cabeça.
+      sphere(0.022, 0.79, 0.105, 0.083, detailMaterial, 16, 12)
+      sphere(0.022, 0.79, 0.105, -0.083, detailMaterial, 16, 12)
+      sphere(0.014, 0.705, 0.197, 0.078, accentMaterial, 12, 10)
+      sphere(0.014, 0.705, 0.197, -0.078, accentMaterial, 12, 10)
+      // Crina ondulada em pequenas formas cônicas seguindo a nuca.
+      for (let i = 0; i < 4; i++) {
+        const mane = new THREE.SphereGeometry(0.042, 16, 12)
+        addMesh(mane, 0.89 - i * 0.075, -0.115 + i * 0.018, -0.01, detailMaterial, { x: 0, z: -0.3 })
       }
-      addMesh(new THREE.SphereGeometry(.075,20,16), 1.02, 0, 0, detailMaterial)
       break
     }
-    case 'k': { // Rei: corpo mais alto, gola e cruz tridimensional.
-      lathe([[.17,.34],[.21,.39],[.17,.44],[.13,.53],[.12,.68],[.15,.75],[.19,.79],[.20,.83],[.16,.87],[.12,.90],[.11,.94],[.07,.96]])
-      ring(.18,.016,.82,detailMaterial)
-      addMesh(new THREE.SphereGeometry(.07,20,16), .98, 0, 0, detailMaterial)
-      addMesh(new THREE.BoxGeometry(.075,.30,.075), 1.12, 0, 0, detailMaterial)
-      addMesh(new THREE.BoxGeometry(.23,.075,.075), 1.145, 0, 0, detailMaterial)
+    case 'b': { // Bispo: mitra alongada com ponta suave e fenda diagonal.
+      lathe([
+        [0.00, 0.29], [0.17, 0.29], [0.19, 0.33], [0.16, 0.37],
+        [0.12, 0.43], [0.09, 0.50], [0.085, 0.58], [0.105, 0.64],
+        [0.145, 0.68], [0.15, 0.71], [0.125, 0.735], [0.085, 0.76],
+        [0.045, 0.80], [0.00, 0.825],
+      ])
+      sphere(0.035, 0.805, 0, 0, detailMaterial, 20, 16)
+      // Fenda inclinada, fina, na frente da mitra.
+      addMesh(new THREE.BoxGeometry(0.018, 0.16, 0.012), 0.735, 0, 0.083, accentMaterial, { x: 0, z: -0.48 })
+      ring(0.143, 0.009, 0.697, detailMaterial)
+      break
+    }
+    case 'q': { // Rainha: cintura estreita e coroa com aro e pontas redondeadas.
+      lathe([
+        [0.00, 0.29], [0.17, 0.29], [0.195, 0.33], [0.16, 0.37],
+        [0.125, 0.43], [0.095, 0.51], [0.085, 0.61], [0.105, 0.67],
+        [0.145, 0.70], [0.18, 0.73], [0.19, 0.77], [0.175, 0.80],
+        [0.00, 0.80],
+      ])
+      ring(0.177, 0.016, 0.775, detailMaterial)
+      for (let i = 0; i < 8; i++) {
+        const a = (i / 8) * Math.PI * 2
+        const x = Math.cos(a) * 0.15, z = Math.sin(a) * 0.15
+        sphere(0.033, 0.825, x, z, material, 18, 14)
+        sphere(0.018, 0.855, x, z, detailMaterial, 16, 12)
+      }
+      sphere(0.07, 0.825, 0, 0, detailMaterial)
+      sphere(0.045, 0.87, 0, 0, material)
+      break
+    }
+    case 'k': { // Rei: corpo mais alto, gola e cruz bem proporcionada.
+      lathe([
+        [0.00, 0.29], [0.17, 0.29], [0.20, 0.33], [0.17, 0.37],
+        [0.13, 0.44], [0.105, 0.53], [0.095, 0.64], [0.12, 0.70],
+        [0.16, 0.74], [0.18, 0.78], [0.16, 0.81], [0.12, 0.84],
+        [0.00, 0.84],
+      ])
+      ring(0.17, 0.014, 0.77, detailMaterial)
+      sphere(0.06, 0.86, 0, 0, detailMaterial)
+      // Cruz latina clássica com extremidades suavizadas.
+      addMesh(new THREE.CapsuleGeometry(0.031, 0.19, 5, 16), 1.035, 0, 0, detailMaterial)
+      addMesh(new THREE.CapsuleGeometry(0.027, 0.115, 5, 16), 1.055, 0, 0, detailMaterial, { x: 0, z: Math.PI / 2 })
       break
     }
   }
