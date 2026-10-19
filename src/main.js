@@ -14,6 +14,12 @@ let botTimer = null
 let selectedSquare = null
 let lastMove = null // casas de origem e destino do lance mais recente
 let pendingPromotion = null
+let moveAnimation = null
+let animateLastMove = false
+let boardRotationTarget = 0
+let soundEnabled = true
+let highQuality = true
+let audioContext = null
 
 const LEVELS = {
   beginner: { label: 'Iniciante', depth: 0 },
@@ -24,7 +30,7 @@ const LEVELS = {
 const PIECE_VALUES = { p: 100, n: 320, b: 335, r: 500, q: 900, k: 20000 }
 
 const scene = new THREE.Scene()
-scene.background = new THREE.Color(0x20232a)
+scene.background = new THREE.Color(0x111a19)
 
 const camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 0.1, 100)
 camera.position.set(7, 9, 10)
@@ -35,6 +41,9 @@ renderer.setSize(window.innerWidth, window.innerHeight)
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
 renderer.shadowMap.enabled = true
 renderer.shadowMap.type = THREE.PCFSoftShadowMap
+renderer.outputColorSpace = THREE.SRGBColorSpace
+renderer.toneMapping = THREE.ACESFilmicToneMapping
+renderer.toneMappingExposure = 1.12
 
 const app = document.querySelector('#app')
 app.replaceChildren(renderer.domElement)
@@ -260,6 +269,7 @@ document.head.appendChild(responsiveStyle)
 const modeOverlay = createOverlay(30)
 modeOverlay.style.display = 'flex'
 const modePanel = createModalPanel('680px')
+modePanel.classList.add('chess-start-panel')
 modeOverlay.appendChild(modePanel)
 
 const eyebrow = document.createElement('div')
@@ -360,6 +370,7 @@ function startGame(mode, level = 'beginner') {
 function createModeCard(icon, heading, description, onClick) {
   const card = document.createElement('button')
   card.type = 'button'
+  card.className = 'chess-mode-card'
   Object.assign(card.style, {
     display: 'block',
     textAlign: 'left',
@@ -601,8 +612,8 @@ function openPromotionPicker(from, to) {
 // 5. ILUMINAÇÃO
 // ======================================================
 
-scene.add(new THREE.AmbientLight(0xffffff, 1.8))
-const directionalLight = new THREE.DirectionalLight(0xffffff, 3)
+scene.add(new THREE.AmbientLight(0xe8f0e9, 1.45))
+const directionalLight = new THREE.DirectionalLight(0xfff0d3, 2.7)
 directionalLight.position.set(5, 10, 6)
 directionalLight.castShadow = true
 scene.add(directionalLight)
@@ -614,8 +625,8 @@ scene.add(directionalLight)
 const boardGroup = new THREE.Group()
 scene.add(boardGroup)
 const squareGeometry = new THREE.BoxGeometry(1, 0.2, 1)
-const lightSquareMaterial = new THREE.MeshStandardMaterial({ color: 0xe8d5b7, roughness: 0.8 })
-const darkSquareMaterial = new THREE.MeshStandardMaterial({ color: 0x65452f, roughness: 0.8 })
+const lightSquareMaterial = new THREE.MeshStandardMaterial({ color: 0xe9dfca, roughness: 0.72 })
+const darkSquareMaterial = new THREE.MeshStandardMaterial({ color: 0x31584b, roughness: 0.68 })
 const squareMeshes = new Map()
 
 function squareToPosition(square) {
@@ -625,6 +636,20 @@ function squareToPosition(square) {
 }
 
 function createBoard() {
+  const plinth = new THREE.Mesh(
+    new THREE.BoxGeometry(8.34, 0.18, 8.34),
+    new THREE.MeshStandardMaterial({ color: 0x17231f, roughness: 0.36, metalness: 0.22 }),
+  )
+  plinth.position.set(0, -0.19, 0)
+  plinth.castShadow = true
+  plinth.receiveShadow = true
+  boardGroup.add(plinth)
+  const trim = new THREE.Mesh(
+    new THREE.BoxGeometry(8.39, 0.035, 8.39),
+    new THREE.MeshStandardMaterial({ color: 0x9a804a, roughness: 0.3, metalness: 0.6 }),
+  )
+  trim.position.set(0, -0.095, 0)
+  boardGroup.add(trim)
   for (let row = 0; row < 8; row++) {
     for (let col = 0; col < 8; col++) {
       const square = new THREE.Mesh(squareGeometry, (row + col) % 2 === 0 ? darkSquareMaterial : lightSquareMaterial)
@@ -645,8 +670,8 @@ createBoard()
 
 const pieceGroup = new THREE.Group()
 scene.add(pieceGroup)
-const whiteMaterial = new THREE.MeshStandardMaterial({ color: 0xf5f0e6, roughness: 0.35, metalness: 0.05 })
-const blackMaterial = new THREE.MeshStandardMaterial({ color: 0x252525, roughness: 0.35, metalness: 0.1 })
+const whiteMaterial = new THREE.MeshStandardMaterial({ color: 0xf7f0df, roughness: 0.29, metalness: 0.08 })
+const blackMaterial = new THREE.MeshStandardMaterial({ color: 0x202b29, roughness: 0.27, metalness: 0.18 })
 const pieceBaseGeometry = new THREE.CylinderGeometry(0.3, 0.35, 0.12, 32)
 const pieceStemGeometry = new THREE.CylinderGeometry(0.12, 0.22, 0.35, 24)
 
@@ -656,7 +681,7 @@ function createPieceMesh(type, color, square) {
 
   // Pequenos detalhes metálicos ajudam a separar visualmente cada peça.
   const detailMaterial = new THREE.MeshStandardMaterial({
-    color: color === 'w' ? 0xc5a96b : 0x9b7b43,
+    color: color === 'w' ? 0xd9bd7a : 0x8d7441,
     metalness: 0.55,
     roughness: 0.32,
   })
@@ -761,6 +786,36 @@ function createPieceMesh(type, color, square) {
   return piece
 }
 
+function playTone(frequency = 520, duration = 0.075, type = 'sine', volume = 0.035) {
+  if (!soundEnabled) return
+  try {
+    const AudioContextClass = window.AudioContext || window.webkitAudioContext
+    if (!AudioContextClass) return
+    if (!audioContext) audioContext = new AudioContextClass()
+    if (audioContext.state === 'suspended') audioContext.resume()
+    const oscillator = audioContext.createOscillator()
+    const gain = audioContext.createGain()
+    oscillator.type = type
+    oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime)
+    gain.gain.setValueAtTime(volume, audioContext.currentTime)
+    gain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + duration)
+    oscillator.connect(gain)
+    gain.connect(audioContext.destination)
+    oscillator.start()
+    oscillator.stop(audioContext.currentTime + duration)
+  } catch (error) {
+    // Áudio é opcional; falhas do navegador não devem interromper a partida.
+  }
+}
+
+function playMoveSound(captured = false) {
+  if (game.isCheck()) {
+    playTone(720, 0.14, 'triangle', 0.045)
+    return
+  }
+  playTone(captured ? 250 : 460, captured ? 0.11 : 0.065, captured ? 'triangle' : 'sine', 0.035)
+}
+
 function renderPieces() {
   while (pieceGroup.children.length > 0) pieceGroup.remove(pieceGroup.children[0])
   const position = game.board()
@@ -769,9 +824,17 @@ function renderPieces() {
       const chessPiece = position[row][col]
       if (!chessPiece) continue
       const square = String.fromCharCode(97 + col) + (8 - row)
-      pieceGroup.add(createPieceMesh(chessPiece.type, chessPiece.color, square))
+      const piece = createPieceMesh(chessPiece.type, chessPiece.color, square)
+      if (animateLastMove && lastMove && square === lastMove.to) {
+        const fromPosition = squareToPosition(lastMove.from)
+        const targetPosition = { x: piece.position.x, z: piece.position.z }
+        piece.position.set(fromPosition.x, 0, fromPosition.z)
+        moveAnimation = { piece, from: { x: fromPosition.x, z: fromPosition.z }, to: targetPosition, startedAt: performance.now(), duration: 260 }
+      }
+      pieceGroup.add(piece)
     }
   }
+  animateLastMove = false
 }
 
 // ======================================================
@@ -780,10 +843,11 @@ function renderPieces() {
 
 const highlightGroup = new THREE.Group()
 scene.add(highlightGroup)
-const moveHighlightMaterial = new THREE.MeshBasicMaterial({ color: 0x20e85a, transparent: true, opacity: 0.65, depthWrite: false })
-const selectedMaterial = new THREE.MeshBasicMaterial({ color: 0x4a90e2, transparent: true, opacity: 0.62, depthWrite: false })
-const lastMoveFromMaterial = new THREE.MeshBasicMaterial({ color: 0x8cbd62, transparent: true, opacity: 0.5, depthWrite: false })
-const lastMoveToMaterial = new THREE.MeshBasicMaterial({ color: 0x28e85f, transparent: true, opacity: 0.72, depthWrite: false })
+const moveHighlightMaterial = new THREE.MeshBasicMaterial({ color: 0x8ab99a, transparent: true, opacity: 0.42, depthWrite: false })
+const selectedMaterial = new THREE.MeshBasicMaterial({ color: 0xd8bd7c, transparent: true, opacity: 0.58, depthWrite: false })
+const lastMoveFromMaterial = new THREE.MeshBasicMaterial({ color: 0x9fba83, transparent: true, opacity: 0.38, depthWrite: false })
+const lastMoveToMaterial = new THREE.MeshBasicMaterial({ color: 0xd8bd7c, transparent: true, opacity: 0.58, depthWrite: false })
+const checkMaterial = new THREE.MeshBasicMaterial({ color: 0xc95e54, transparent: true, opacity: 0.7, depthWrite: false })
 const highlightGeometry = new THREE.BoxGeometry(0.88, 0.025, 0.88)
 
 function clearHighlights() {
@@ -809,6 +873,17 @@ function drawLastMoveHighlights() {
 function refreshHighlights() {
   clearHighlights()
   drawLastMoveHighlights()
+  if (game.isCheck()) {
+    const board = game.board()
+    for (let row = 0; row < 8; row++) {
+      for (let col = 0; col < 8; col++) {
+        const piece = board[row][col]
+        if (piece && piece.type === 'k' && piece.color === game.turn()) {
+          addHighlight(String.fromCharCode(97 + col) + (8 - row), checkMaterial, 'check')
+        }
+      }
+    }
+  }
   if (!selectedSquare) return
   addHighlight(selectedSquare, selectedMaterial, 'selected')
   for (const move of game.moves({ square: selectedSquare, verbose: true })) {
@@ -887,12 +962,31 @@ function updateInterface() {
   const modeText = gameMode === 'bot' ? `Contra o robô · ${LEVELS[botLevel].label}` : 'Dois jogadores'
   messageLabel.textContent = status || `${modeText}. Selecione uma peça para ver os movimentos.`
   const history = game.history()
+  historyPanel.replaceChildren()
+  const historyHeading = document.createElement('div')
+  historyHeading.className = 'chess-history-heading'
+  historyHeading.textContent = 'HISTÓRICO DE JOGADAS'
+  historyPanel.appendChild(historyHeading)
   if (history.length === 0) {
-    historyPanel.textContent = 'Histórico de jogadas'
+    const emptyHistory = document.createElement('div')
+    emptyHistory.className = 'chess-history-empty'
+    emptyHistory.textContent = 'As jogadas aparecerão aqui.'
+    historyPanel.appendChild(emptyHistory)
   } else {
-    const moves = []
-    for (let i = 0; i < history.length; i += 2) moves.push(`${Math.floor(i / 2) + 1}. ${history[i]}   ${history[i + 1] || ''}`)
-    historyPanel.textContent = `Histórico de jogadas\n${moves.join('\n')}`
+    for (let i = 0; i < history.length; i += 2) {
+      const row = document.createElement('div')
+      row.className = 'chess-history-row'
+      if (i >= history.length - 2) row.classList.add('is-latest')
+      const number = document.createElement('span')
+      number.className = 'chess-history-number'
+      number.textContent = `${Math.floor(i / 2) + 1}.`
+      const whiteMove = document.createElement('span')
+      whiteMove.textContent = history[i]
+      const blackMove = document.createElement('span')
+      blackMove.textContent = history[i + 1] || '…'
+      row.append(number, whiteMove, blackMove)
+      historyPanel.appendChild(row)
+    }
   }
 
   // Contra o robô, só é possível desfazer enquanto ele ainda está pensando:
@@ -1048,8 +1142,11 @@ function makeBotMove() {
     try {
       const move = chooseBotMove()
       if (move) {
+        const captured = Boolean(game.get(move.to))
         game.move({ from: move.from, to: move.to, ...(move.promotion ? { promotion: move.promotion } : {}) })
         lastMove = { from: move.from, to: move.to }
+        animateLastMove = true
+        playMoveSound(captured)
       }
     } catch (error) {
       console.error('O robô não conseguiu realizar a jogada:', error)
@@ -1068,6 +1165,7 @@ function makeBotMove() {
 // ======================================================
 
 function completeMove(from, to, promotion) {
+  const captured = Boolean(game.get(to))
   try {
     game.move({ from, to, ...(promotion ? { promotion } : {}) })
   } catch (error) {
@@ -1076,6 +1174,8 @@ function completeMove(from, to, promotion) {
   }
 
   lastMove = { from, to }
+  animateLastMove = true
+  playMoveSound(captured)
   selectedSquare = null
   refreshHighlights()
   renderPieces()
@@ -1208,6 +1308,8 @@ controls.appendChild(createButton('Nova partida', () => {
   game.reset()
   selectedSquare = null
   lastMove = null
+  moveAnimation = null
+  animateLastMove = false
   pendingPromotion = null
   promotionOverlay.style.display = 'none'
   finishOverlay.style.display = 'none'
@@ -1216,12 +1318,49 @@ controls.appendChild(createButton('Nova partida', () => {
   updateInterface()
 }))
 
+controls.appendChild(createButton('Girar tabuleiro', () => {
+  boardRotationTarget = boardRotationTarget === 0 ? Math.PI : 0
+}))
+
+const soundButton = createButton('Som: ligado', () => {
+  soundEnabled = !soundEnabled
+  soundButton.textContent = soundEnabled ? 'Som: ligado' : 'Som: desligado'
+  if (soundEnabled) playTone(520, 0.06, 'sine', 0.025)
+})
+controls.appendChild(soundButton)
+
+const qualityButton = createButton('Qualidade: alta', () => {
+  highQuality = !highQuality
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, highQuality ? 2 : 1))
+  renderer.shadowMap.enabled = highQuality
+  directionalLight.castShadow = highQuality
+  qualityButton.textContent = highQuality ? 'Qualidade: alta' : 'Qualidade: econômica'
+})
+controls.appendChild(qualityButton)
+
 // ======================================================
 // 14. ANIMAÇÃO E REDIMENSIONAMENTO
 // ======================================================
 
 function animate() {
   requestAnimationFrame(animate)
+  const rotationGroups = [boardGroup, pieceGroup, highlightGroup]
+  for (const group of rotationGroups) {
+    const delta = boardRotationTarget - group.rotation.y
+    if (Math.abs(delta) > 0.001) group.rotation.y += delta * 0.12
+    else group.rotation.y = boardRotationTarget
+  }
+  if (moveAnimation) {
+    const progress = Math.min(1, (performance.now() - moveAnimation.startedAt) / moveAnimation.duration)
+    const eased = 1 - Math.pow(1 - progress, 3)
+    moveAnimation.piece.position.x = moveAnimation.from.x + (moveAnimation.to.x - moveAnimation.from.x) * eased
+    moveAnimation.piece.position.z = moveAnimation.from.z + (moveAnimation.to.z - moveAnimation.from.z) * eased
+    moveAnimation.piece.position.y = Math.sin(progress * Math.PI) * 0.16
+    if (progress >= 1) {
+      moveAnimation.piece.position.y = 0
+      moveAnimation = null
+    }
+  }
   renderer.render(scene, camera)
 }
 
