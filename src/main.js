@@ -77,10 +77,10 @@ function createButton(label, onClick, primary = false) {
   button.className = 'chess-ui-button'
   button.textContent = label
   Object.assign(button.style, {
-    border: primary ? '1px solid #d9b66e' : '1px solid #656b75',
+    border: primary ? '1px solid #d8d8d8' : '1px solid #656b75',
     borderRadius: '9px',
     padding: '10px 13px',
-    background: primary ? '#b69a68' : '#252525',
+    background: primary ? '#777777' : '#252525',
     color: primary ? '#171615' : '#ffffff',
     fontSize: '14px',
     fontWeight: primary ? '700' : '500',
@@ -89,11 +89,11 @@ function createButton(label, onClick, primary = false) {
     transition: 'background 160ms ease, transform 160ms ease',
   })
   button.addEventListener('mouseenter', () => {
-    button.style.background = primary ? '#d0b783' : '#393939'
+    button.style.background = primary ? '#aaaaaa' : '#393939'
     button.style.transform = 'translateY(-1px)'
   })
   button.addEventListener('mouseleave', () => {
-    button.style.background = primary ? '#b69a68' : '#252525'
+    button.style.background = primary ? '#777777' : '#252525'
     button.style.transform = 'translateY(0)'
   })
   button.addEventListener('click', onClick)
@@ -130,10 +130,10 @@ function createModalPanel(maxWidth = '650px') {
     boxSizing: 'border-box',
     padding: 'clamp(18px, 4vw, 28px)',
     borderRadius: '18px',
-    background: 'linear-gradient(145deg, #2b2925, #171717)',
-    border: '1px solid #596272',
+    background: 'linear-gradient(145deg, #292929, #171717)',
+    border: '1px solid #555555',
     boxShadow: '0 24px 80px rgba(0,0,0,.45)',
-    color: '#f3f4f6',
+    color: '#f2f2f2',
     lineHeight: '1.6',
   })
   return panel
@@ -237,8 +237,8 @@ ui.appendChild(messageLabel)
 const responsiveStyle = document.createElement('style')
 responsiveStyle.textContent = `
   .chess-top-panel { z-index: 2; }
-  .chess-ui-button:focus-visible { outline: 2px solid #f0cf83; outline-offset: 2px; }
-  .chess-modal-panel h3 { color: #e6c47c; }
+  .chess-ui-button:focus-visible { outline: 2px solid #f0f0f0; outline-offset: 2px; }
+  .chess-modal-panel h3 { color: #e6e6e6; }
   .chess-modal-panel p { overflow-wrap: anywhere; }
   @media (max-width: 720px) {
     .chess-top-panel { top: max(8px, env(safe-area-inset-top)); left: 9px; right: 9px; align-items: flex-start; gap: 7px; }
@@ -277,7 +277,7 @@ modeOverlay.appendChild(modePanel)
 const eyebrow = document.createElement('div')
 eyebrow.textContent = 'ESCOLHA COMO JOGAR'
 Object.assign(eyebrow.style, {
-  color: '#c5ab7a',
+  color: '#d0d0d0',
   fontSize: '12px',
   fontWeight: '700',
   letterSpacing: '2px',
@@ -295,7 +295,7 @@ modePanel.appendChild(modeHeading)
 
 const modeDescription = document.createElement('p')
 modeDescription.textContent = 'Jogue com outra pessoa no mesmo dispositivo ou pratique contra o computador.'
-Object.assign(modeDescription.style, { color: '#c2c8d1', margin: '0 0 22px' })
+Object.assign(modeDescription.style, { color: '#c2c2c2', margin: '0 0 22px' })
 modePanel.appendChild(modeDescription)
 
 const modeCards = document.createElement('div')
@@ -322,7 +322,7 @@ levelArea.appendChild(levelTitle)
 
 const levelDescription = document.createElement('p')
 levelDescription.textContent = 'Você jogará com as brancas; o robô jogará com as pretas.'
-Object.assign(levelDescription.style, { color: '#c2c8d1', margin: '0 0 14px' })
+Object.assign(levelDescription.style, { color: '#c2c2c2', margin: '0 0 14px' })
 levelArea.appendChild(levelDescription)
 
 const levelButtons = document.createElement('div')
@@ -378,9 +378,9 @@ function createModeCard(icon, heading, description, onClick) {
     textAlign: 'left',
     padding: '20px',
     borderRadius: '14px',
-    border: '1px solid #596272',
+    border: '1px solid #555555',
     background: '#242424',
-    color: '#f4f1e9',
+    color: '#f4f4f4',
     cursor: 'pointer',
     minHeight: '150px',
     transition: 'background 160ms ease, border-color 160ms ease, transform 160ms ease',
@@ -393,16 +393,16 @@ function createModeCard(icon, heading, description, onClick) {
   Object.assign(titleEl.style, { fontSize: '18px', fontWeight: '700', marginBottom: '6px' })
   const descEl = document.createElement('div')
   descEl.textContent = description
-  Object.assign(descEl.style, { color: '#c2c8d1', fontSize: '14px', lineHeight: '1.5' })
+  Object.assign(descEl.style, { color: '#c2c2c2', fontSize: '14px', lineHeight: '1.5' })
   card.append(iconEl, titleEl, descEl)
   card.addEventListener('mouseenter', () => {
-    card.style.background = '#37332c'
-    card.style.borderColor = '#d0aa62'
+    card.style.background = '#303030'
+    card.style.borderColor = '#c8c8c8'
     card.style.transform = 'translateY(-2px)'
   })
   card.addEventListener('mouseleave', () => {
     card.style.background = '#242424'
-    card.style.borderColor = '#766b58'
+    card.style.borderColor = '#666666'
     card.style.transform = 'translateY(0)'
   })
   card.addEventListener('click', onClick)
@@ -435,9 +435,9 @@ for (const option of levelOptions) {
     textAlign: 'left',
     padding: '13px',
     borderRadius: '10px',
-    border: '1px solid #596272',
+    border: '1px solid #555555',
     background: '#242424',
-    color: '#f4f1e9',
+    color: '#f4f4f4',
     cursor: 'pointer',
   })
   const name = document.createElement('div')
@@ -445,14 +445,14 @@ for (const option of levelOptions) {
   name.style.fontWeight = '700'
   const description = document.createElement('div')
   description.textContent = option.description
-  Object.assign(description.style, { marginTop: '5px', color: '#c2c8d1', fontSize: '12px', lineHeight: '1.4' })
+  Object.assign(description.style, { marginTop: '5px', color: '#c2c2c2', fontSize: '12px', lineHeight: '1.4' })
   button.append(name, description)
   button.addEventListener('mouseenter', () => {
-    button.style.borderColor = '#d0aa62'
-    button.style.background = '#37332c'
+    button.style.borderColor = '#c8c8c8'
+    button.style.background = '#303030'
   })
   button.addEventListener('mouseleave', () => {
-    button.style.borderColor = '#766b58'
+    button.style.borderColor = '#666666'
     button.style.background = '#242424'
   })
   button.addEventListener('click', () => startGame('bot', option.key))
@@ -480,17 +480,17 @@ manualHeader.appendChild(createButton('Fechar', () => { manualOverlay.style.disp
 const manualContent = document.createElement('div')
 manualContent.innerHTML = `
   <div style="padding:16px;border-radius:12px;background:#303a49;margin-bottom:18px">
-    <div style="font-size:18px;font-weight:700;color:#e6c47c">Objetivo do jogo</div>
+    <div style="font-size:18px;font-weight:700;color:#e6e6e6">Objetivo do jogo</div>
     <p style="margin-bottom:0">Dar xeque-mate no rei adversário: atacar o rei de forma que ele não possa escapar, bloquear o ataque ou capturar a peça atacante.</p>
   </div>
   <h3>Como as peças se movimentam</h3>
   <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:10px">
-    <div style="padding:12px;border:1px solid #596272;border-radius:10px"><div style="font-size:30px">♟</div><strong>Peão</strong><p>Avança uma casa (ou duas na primeira jogada). Captura na diagonal.</p></div>
-    <div style="padding:12px;border:1px solid #596272;border-radius:10px"><div style="font-size:30px">♜</div><strong>Torre</strong><p>Move-se na horizontal ou vertical.</p></div>
-    <div style="padding:12px;border:1px solid #596272;border-radius:10px"><div style="font-size:30px">♞</div><strong>Cavalo</strong><p>Move-se em formato de L e salta sobre peças.</p></div>
-    <div style="padding:12px;border:1px solid #596272;border-radius:10px"><div style="font-size:30px">♝</div><strong>Bispo</strong><p>Move-se pelas diagonais.</p></div>
-    <div style="padding:12px;border:1px solid #596272;border-radius:10px"><div style="font-size:30px">♛</div><strong>Dama</strong><p>Move-se na horizontal, vertical e diagonal.</p></div>
-    <div style="padding:12px;border:1px solid #596272;border-radius:10px"><div style="font-size:30px">♚</div><strong>Rei</strong><p>Move-se uma casa em qualquer direção, sem ficar em xeque.</p></div>
+    <div style="padding:12px;border:1px solid #555555;border-radius:10px"><div style="font-size:30px">♟</div><strong>Peão</strong><p>Avança uma casa (ou duas na primeira jogada). Captura na diagonal.</p></div>
+    <div style="padding:12px;border:1px solid #555555;border-radius:10px"><div style="font-size:30px">♜</div><strong>Torre</strong><p>Move-se na horizontal ou vertical.</p></div>
+    <div style="padding:12px;border:1px solid #555555;border-radius:10px"><div style="font-size:30px">♞</div><strong>Cavalo</strong><p>Move-se em formato de L e salta sobre peças.</p></div>
+    <div style="padding:12px;border:1px solid #555555;border-radius:10px"><div style="font-size:30px">♝</div><strong>Bispo</strong><p>Move-se pelas diagonais.</p></div>
+    <div style="padding:12px;border:1px solid #555555;border-radius:10px"><div style="font-size:30px">♛</div><strong>Dama</strong><p>Move-se na horizontal, vertical e diagonal.</p></div>
+    <div style="padding:12px;border:1px solid #555555;border-radius:10px"><div style="font-size:30px">♚</div><strong>Rei</strong><p>Move-se uma casa em qualquer direção, sem ficar em xeque.</p></div>
   </div>
   <h3>Regras importantes</h3>
   <ul>
@@ -509,7 +509,7 @@ manualContent.innerHTML = `
     <li>Clique na casa de destino para fazer a jogada.</li>
     <li>Use “Desfazer” para voltar jogadas ou “Nova partida” para reiniciar.</li>
   </ol>
-  <p style="color:#c2c8d1;font-size:13px">O jogo usa chess.js para validar os movimentos. As peças 3D são representações visuais simplificadas.</p>
+  <p style="color:#c2c2c2;font-size:13px">O jogo usa chess.js para validar os movimentos. As peças 3D são representações visuais simplificadas.</p>
 `
 Object.assign(manualContent.style, { color: '#e6e9ef', lineHeight: '1.65' })
 manualPanel.appendChild(manualContent)
@@ -532,7 +532,7 @@ finishOverlay.appendChild(finishPanel)
 
 const finishIcon = document.createElement('div')
 finishIcon.textContent = '♔'
-Object.assign(finishIcon.style, { fontSize: '48px', lineHeight: '1.1', color: '#e6c47c', marginBottom: '12px' })
+Object.assign(finishIcon.style, { fontSize: '48px', lineHeight: '1.1', color: '#e6e6e6', marginBottom: '12px' })
 finishPanel.appendChild(finishIcon)
 
 const finishTitle = document.createElement('h2')
@@ -540,7 +540,7 @@ Object.assign(finishTitle.style, { fontSize: 'clamp(24px, 5vw, 34px)', margin: '
 finishPanel.appendChild(finishTitle)
 
 const finishDescription = document.createElement('p')
-Object.assign(finishDescription.style, { color: '#c2c8d1', margin: '0 0 22px' })
+Object.assign(finishDescription.style, { color: '#c2c2c2', margin: '0 0 22px' })
 finishPanel.appendChild(finishDescription)
 
 const finishActions = document.createElement('div')
@@ -565,7 +565,7 @@ promotionPanel.appendChild(promotionTitle)
 
 const promotionDescription = document.createElement('p')
 promotionDescription.textContent = 'Seu peão chegou à última fileira. Escolha a peça que deseja receber.'
-promotionDescription.style.color = '#c2c8d1'
+promotionDescription.style.color = '#c2c2c2'
 promotionPanel.appendChild(promotionDescription)
 
 const promotionChoices = document.createElement('div')
@@ -583,8 +583,8 @@ for (const option of promotionOptions) {
   const optionButton = document.createElement('button')
   optionButton.type = 'button'
   Object.assign(optionButton.style, {
-    border: '1px solid #596272', borderRadius: '12px', padding: '14px 10px',
-    background: '#242424', color: '#f4f1e9', cursor: 'pointer', fontSize: '15px',
+    border: '1px solid #555555', borderRadius: '12px', padding: '14px 10px',
+    background: '#242424', color: '#f4f4f4', cursor: 'pointer', fontSize: '15px',
   })
   const glyph = document.createElement('div')
   glyph.textContent = option.glyph
@@ -593,8 +593,8 @@ for (const option of promotionOptions) {
   name.textContent = option.name
   name.style.fontWeight = '700'
   optionButton.append(glyph, name)
-  optionButton.addEventListener('mouseenter', () => { optionButton.style.borderColor = '#d0aa62'; optionButton.style.background = '#37332c' })
-  optionButton.addEventListener('mouseleave', () => { optionButton.style.borderColor = '#766b58'; optionButton.style.background = '#242424' })
+  optionButton.addEventListener('mouseenter', () => { optionButton.style.borderColor = '#c8c8c8'; optionButton.style.background = '#303030' })
+  optionButton.addEventListener('mouseleave', () => { optionButton.style.borderColor = '#666666'; optionButton.style.background = '#242424' })
   optionButton.addEventListener('click', () => {
     if (!pendingPromotion) return
     const pending = pendingPromotion
@@ -648,7 +648,7 @@ scene.add(floor)
 const boardGroup = new THREE.Group()
 scene.add(boardGroup)
 const squareGeometry = new THREE.BoxGeometry(1, 0.2, 1)
-const lightSquareMaterial = new THREE.MeshStandardMaterial({ color: 0xe8dcc4, roughness: 0.78 })
+const lightSquareMaterial = new THREE.MeshStandardMaterial({ color: 0xf0f0f0, roughness: 0.78 })
 const darkSquareMaterial = new THREE.MeshStandardMaterial({ color: 0x242424, roughness: 0.7 })
 const squareMeshes = new Map()
 const coordinateGroup = new THREE.Group()
@@ -671,7 +671,7 @@ function createBoard() {
   boardGroup.add(plinth)
 
   // Moldura perimetral em camadas, como um tabuleiro de madeira premium.
-  const frameMaterial = new THREE.MeshStandardMaterial({ color: 0x30291f, roughness: 0.36, metalness: 0.18 })
+  const frameMaterial = new THREE.MeshStandardMaterial({ color: 0x161616, roughness: 0.36, metalness: 0.18 })
   const railGeometry = new THREE.BoxGeometry(8.56, 0.13, 0.22)
   for (const z of [-4.12, 4.12]) {
     const rail = new THREE.Mesh(railGeometry, frameMaterial)
@@ -690,7 +690,7 @@ function createBoard() {
   }
   const trim = new THREE.Mesh(
     new THREE.BoxGeometry(8.39, 0.035, 8.39),
-    new THREE.MeshStandardMaterial({ color: 0xb69a68, roughness: 0.28, metalness: 0.62 }),
+    new THREE.MeshStandardMaterial({ color: 0x777777, roughness: 0.28, metalness: 0.62 }),
   )
   trim.position.set(0, -0.095, 0)
   boardGroup.add(trim)
@@ -718,7 +718,7 @@ function createCoordinateSprite(label, x, z, isLightEdge) {
   ctx.font = '600 54px DM Sans, Arial, sans-serif'
   ctx.textAlign = 'center'
   ctx.textBaseline = 'middle'
-  ctx.fillStyle = isLightEdge ? '#e4d4b6' : '#a99570'
+  ctx.fillStyle = isLightEdge ? '#e0e0e0' : '#777777'
   ctx.fillText(label, 64, 66)
   const texture = new THREE.CanvasTexture(canvas)
   texture.colorSpace = THREE.SRGBColorSpace
@@ -744,7 +744,7 @@ for (let rank = 1; rank <= 8; rank++) {
 
 const pieceGroup = new THREE.Group()
 scene.add(pieceGroup)
-const whiteMaterial = new THREE.MeshStandardMaterial({ color: 0xe9dfca, roughness: 0.31, metalness: 0.025 })
+const whiteMaterial = new THREE.MeshStandardMaterial({ color: 0xf3f3f3, roughness: 0.31, metalness: 0.025 })
 const blackMaterial = new THREE.MeshStandardMaterial({ color: 0x20201f, roughness: 0.28, metalness: 0.12 })
 const pieceBaseGeometry = new THREE.CylinderGeometry(0.3, 0.35, 0.12, 40)
 const pieceStemGeometry = new THREE.CylinderGeometry(0.12, 0.22, 0.35, 24)
@@ -753,7 +753,7 @@ function createPieceMesh(type, color, square) {
   const material = color === 'w' ? whiteMaterial : blackMaterial
   const piece = new THREE.Group()
   const detailMaterial = new THREE.MeshStandardMaterial({
-    color: color === 'w' ? 0xb79a62 : 0x8c744c,
+    color: color === 'w' ? 0xbcbcbc : 0x777777,
     metalness: 0.62,
     roughness: 0.28,
   })

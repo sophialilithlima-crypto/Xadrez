@@ -45,4 +45,4 @@ Os níveis usam estratégias progressivamente mais cuidadosas, com busca e avali
 
 ## Direção visual e experiência
 
-A interface usa preto-carvão, bege quente e dourado envelhecido. O tabuleiro ganhou moldura em camadas, coordenadas, piso para sombras e iluminação de preenchimento. Os movimentos legais são marcados com pontos e as capturas com anéis, reduzindo a obstrução das casas. A interface foi refinada para desktop e telas menores. Consulte `MELHORIAS-DE-DESIGN.txt` para detalhes.
+A interface usa preto-carvão, branco quente e cinza metálico. O tabuleiro ganhou moldura em camadas, coordenadas, piso para sombras e iluminação de preenchimento. Os movimentos legais são marcados com pontos e as capturas com anéis, reduzindo a obstrução das casas. A interface foi refinada para desktop e telas menores. Consulte `MELHORIAS-DE-DESIGN.txt` para detalhes.
