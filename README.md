@@ -2,6 +2,10 @@
 
 Um jogo de xadrez em três dimensões desenvolvido com **JavaScript**, **Three.js** e **chess.js**. O projeto reúne um tabuleiro 3D interativo, uma interface monocromática e modos de partida para jogar com outra pessoa ou contra o computador.
 
+## Link do jogo
+
+https://sophialilithlima-crypto.github.io/Xadrez/
+
 ## Sobre o projeto
 
 O **Xadrez 3D** foi criado como um projeto de estudo de desenvolvimento web, com foco em gráficos 3D, interação com o usuário, lógica de jogos e publicação de aplicações no GitHub Pages.
@@ -116,18 +120,6 @@ Para testar a versão compilada localmente:
 ```bash
 npm run preview
 ```
-
-## Publicação no GitHub Pages
-
-O repositório contém um workflow do GitHub Actions para automatizar a compilação e a publicação.
-
-1. Envie o projeto para a branch `main` do repositório `Xadrez`.
-2. No GitHub, abra **Settings → Pages**.
-3. Em **Build and deployment**, selecione **GitHub Actions** como origem da publicação, caso ainda não esteja configurado.
-4. Acesse a aba **Actions** e aguarde o workflow **Publicar Xadrez 3D no GitHub Pages** terminar.
-5. Se a execução for concluída com sucesso, abra o endereço publicado indicado nas configurações de Pages.
-
-O Vite está configurado com o caminho-base `/Xadrez/`, que corresponde ao nome esperado para o repositório. Se o repositório for renomeado, atualize o valor `base` em `vite.config.js` e revise a configuração de publicação.
 
 ## Estrutura do projeto
 
