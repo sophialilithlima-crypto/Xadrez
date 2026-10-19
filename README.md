@@ -1,4 +1,4 @@
-# Xadrez 3D ♟️
+# Xadrez 3D 
 
 Um jogo de xadrez em três dimensões desenvolvido com **JavaScript**, **Three.js** e **chess.js**. O projeto reúne um tabuleiro 3D interativo, uma interface monocromática e modos de partida para jogar com outra pessoa ou contra o computador.
 
