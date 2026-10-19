@@ -30,10 +30,11 @@ const LEVELS = {
 const PIECE_VALUES = { p: 100, n: 320, b: 335, r: 500, q: 900, k: 20000 }
 
 const scene = new THREE.Scene()
-scene.background = new THREE.Color(0x111a19)
+scene.background = new THREE.Color(0x141414)
+scene.fog = new THREE.Fog(0x141414, 17, 34)
 
 const camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 0.1, 100)
-camera.position.set(7, 9, 10)
+camera.position.set(7.7, 9.6, 10.8)
 camera.lookAt(0, 0, 0)
 
 const renderer = new THREE.WebGLRenderer({ antialias: true })
@@ -43,7 +44,8 @@ renderer.shadowMap.enabled = true
 renderer.shadowMap.type = THREE.PCFSoftShadowMap
 renderer.outputColorSpace = THREE.SRGBColorSpace
 renderer.toneMapping = THREE.ACESFilmicToneMapping
-renderer.toneMappingExposure = 1.12
+renderer.toneMappingExposure = 1.04
+renderer.shadowMap.autoUpdate = true
 
 const app = document.querySelector('#app')
 app.replaceChildren(renderer.domElement)
@@ -78,8 +80,8 @@ function createButton(label, onClick, primary = false) {
     border: primary ? '1px solid #d9b66e' : '1px solid #656b75',
     borderRadius: '9px',
     padding: '10px 13px',
-    background: primary ? '#b58b42' : '#292e37',
-    color: primary ? '#17191d' : '#ffffff',
+    background: primary ? '#b69a68' : '#252525',
+    color: primary ? '#171615' : '#ffffff',
     fontSize: '14px',
     fontWeight: primary ? '700' : '500',
     cursor: 'pointer',
@@ -87,11 +89,11 @@ function createButton(label, onClick, primary = false) {
     transition: 'background 160ms ease, transform 160ms ease',
   })
   button.addEventListener('mouseenter', () => {
-    button.style.background = primary ? '#d0a95e' : '#414957'
+    button.style.background = primary ? '#d0b783' : '#393939'
     button.style.transform = 'translateY(-1px)'
   })
   button.addEventListener('mouseleave', () => {
-    button.style.background = primary ? '#b58b42' : '#292e37'
+    button.style.background = primary ? '#b69a68' : '#252525'
     button.style.transform = 'translateY(0)'
   })
   button.addEventListener('click', onClick)
@@ -128,7 +130,7 @@ function createModalPanel(maxWidth = '650px') {
     boxSizing: 'border-box',
     padding: 'clamp(18px, 4vw, 28px)',
     borderRadius: '18px',
-    background: 'linear-gradient(145deg, #252d39, #171c24)',
+    background: 'linear-gradient(145deg, #2b2925, #171717)',
     border: '1px solid #596272',
     boxShadow: '0 24px 80px rgba(0,0,0,.45)',
     color: '#f3f4f6',
@@ -275,7 +277,7 @@ modeOverlay.appendChild(modePanel)
 const eyebrow = document.createElement('div')
 eyebrow.textContent = 'ESCOLHA COMO JOGAR'
 Object.assign(eyebrow.style, {
-  color: '#d9b66e',
+  color: '#c5ab7a',
   fontSize: '12px',
   fontWeight: '700',
   letterSpacing: '2px',
@@ -377,7 +379,7 @@ function createModeCard(icon, heading, description, onClick) {
     padding: '20px',
     borderRadius: '14px',
     border: '1px solid #596272',
-    background: '#202733',
+    background: '#242424',
     color: '#f4f1e9',
     cursor: 'pointer',
     minHeight: '150px',
@@ -394,13 +396,13 @@ function createModeCard(icon, heading, description, onClick) {
   Object.assign(descEl.style, { color: '#c2c8d1', fontSize: '14px', lineHeight: '1.5' })
   card.append(iconEl, titleEl, descEl)
   card.addEventListener('mouseenter', () => {
-    card.style.background = '#2d3746'
+    card.style.background = '#37332c'
     card.style.borderColor = '#d0aa62'
     card.style.transform = 'translateY(-2px)'
   })
   card.addEventListener('mouseleave', () => {
-    card.style.background = '#202733'
-    card.style.borderColor = '#596272'
+    card.style.background = '#242424'
+    card.style.borderColor = '#766b58'
     card.style.transform = 'translateY(0)'
   })
   card.addEventListener('click', onClick)
@@ -434,7 +436,7 @@ for (const option of levelOptions) {
     padding: '13px',
     borderRadius: '10px',
     border: '1px solid #596272',
-    background: '#202733',
+    background: '#242424',
     color: '#f4f1e9',
     cursor: 'pointer',
   })
@@ -447,11 +449,11 @@ for (const option of levelOptions) {
   button.append(name, description)
   button.addEventListener('mouseenter', () => {
     button.style.borderColor = '#d0aa62'
-    button.style.background = '#2d3746'
+    button.style.background = '#37332c'
   })
   button.addEventListener('mouseleave', () => {
-    button.style.borderColor = '#596272'
-    button.style.background = '#202733'
+    button.style.borderColor = '#766b58'
+    button.style.background = '#242424'
   })
   button.addEventListener('click', () => startGame('bot', option.key))
   levelButtons.appendChild(button)
@@ -582,7 +584,7 @@ for (const option of promotionOptions) {
   optionButton.type = 'button'
   Object.assign(optionButton.style, {
     border: '1px solid #596272', borderRadius: '12px', padding: '14px 10px',
-    background: '#202733', color: '#f4f1e9', cursor: 'pointer', fontSize: '15px',
+    background: '#242424', color: '#f4f1e9', cursor: 'pointer', fontSize: '15px',
   })
   const glyph = document.createElement('div')
   glyph.textContent = option.glyph
@@ -591,8 +593,8 @@ for (const option of promotionOptions) {
   name.textContent = option.name
   name.style.fontWeight = '700'
   optionButton.append(glyph, name)
-  optionButton.addEventListener('mouseenter', () => { optionButton.style.borderColor = '#d0aa62'; optionButton.style.background = '#2d3746' })
-  optionButton.addEventListener('mouseleave', () => { optionButton.style.borderColor = '#596272'; optionButton.style.background = '#202733' })
+  optionButton.addEventListener('mouseenter', () => { optionButton.style.borderColor = '#d0aa62'; optionButton.style.background = '#37332c' })
+  optionButton.addEventListener('mouseleave', () => { optionButton.style.borderColor = '#766b58'; optionButton.style.background = '#242424' })
   optionButton.addEventListener('click', () => {
     if (!pendingPromotion) return
     const pending = pendingPromotion
@@ -612,11 +614,32 @@ function openPromotionPicker(from, to) {
 // 5. ILUMINAÇÃO
 // ======================================================
 
-scene.add(new THREE.AmbientLight(0xe8f0e9, 1.45))
-const directionalLight = new THREE.DirectionalLight(0xfff0d3, 2.7)
-directionalLight.position.set(5, 10, 6)
+const ambientLight = new THREE.HemisphereLight(0xe8e0d0, 0x27231d, 1.65)
+scene.add(ambientLight)
+const directionalLight = new THREE.DirectionalLight(0xffe4b4, 3.1)
+directionalLight.position.set(5, 11, 7)
 directionalLight.castShadow = true
+directionalLight.shadow.mapSize.set(2048, 2048)
+directionalLight.shadow.camera.left = -7
+directionalLight.shadow.camera.right = 7
+directionalLight.shadow.camera.top = 7
+directionalLight.shadow.camera.bottom = -7
+directionalLight.shadow.bias = -0.00025
+directionalLight.shadow.normalBias = 0.025
 scene.add(directionalLight)
+const fillLight = new THREE.DirectionalLight(0xc6d6e8, 0.8)
+fillLight.position.set(-7, 5, -5)
+scene.add(fillLight)
+
+// Piso fosco para ancorar visualmente o tabuleiro e receber sombras suaves.
+const floor = new THREE.Mesh(
+  new THREE.PlaneGeometry(200, 200),
+  new THREE.MeshStandardMaterial({ color: 0x171614, roughness: 0.92, metalness: 0.02 }),
+)
+floor.rotation.x = -Math.PI / 2
+floor.position.y = -0.34
+floor.receiveShadow = true
+scene.add(floor)
 
 // ======================================================
 // 6. TABULEIRO 3D
@@ -625,9 +648,11 @@ scene.add(directionalLight)
 const boardGroup = new THREE.Group()
 scene.add(boardGroup)
 const squareGeometry = new THREE.BoxGeometry(1, 0.2, 1)
-const lightSquareMaterial = new THREE.MeshStandardMaterial({ color: 0xe9dfca, roughness: 0.72 })
-const darkSquareMaterial = new THREE.MeshStandardMaterial({ color: 0x31584b, roughness: 0.68 })
+const lightSquareMaterial = new THREE.MeshStandardMaterial({ color: 0xe8dcc4, roughness: 0.78 })
+const darkSquareMaterial = new THREE.MeshStandardMaterial({ color: 0x242424, roughness: 0.7 })
 const squareMeshes = new Map()
+const coordinateGroup = new THREE.Group()
+boardGroup.add(coordinateGroup)
 
 function squareToPosition(square) {
   const col = square.charCodeAt(0) - 97
@@ -638,15 +663,34 @@ function squareToPosition(square) {
 function createBoard() {
   const plinth = new THREE.Mesh(
     new THREE.BoxGeometry(8.34, 0.18, 8.34),
-    new THREE.MeshStandardMaterial({ color: 0x17231f, roughness: 0.36, metalness: 0.22 }),
+    new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.32, metalness: 0.28 }),
   )
   plinth.position.set(0, -0.19, 0)
   plinth.castShadow = true
   plinth.receiveShadow = true
   boardGroup.add(plinth)
+
+  // Moldura perimetral em camadas, como um tabuleiro de madeira premium.
+  const frameMaterial = new THREE.MeshStandardMaterial({ color: 0x30291f, roughness: 0.36, metalness: 0.18 })
+  const railGeometry = new THREE.BoxGeometry(8.56, 0.13, 0.22)
+  for (const z of [-4.12, 4.12]) {
+    const rail = new THREE.Mesh(railGeometry, frameMaterial)
+    rail.position.set(0, -0.015, z)
+    rail.castShadow = true
+    rail.receiveShadow = true
+    boardGroup.add(rail)
+  }
+  const sideRailGeometry = new THREE.BoxGeometry(0.22, 0.13, 8.25)
+  for (const x of [-4.12, 4.12]) {
+    const rail = new THREE.Mesh(sideRailGeometry, frameMaterial)
+    rail.position.set(x, -0.015, 0)
+    rail.castShadow = true
+    rail.receiveShadow = true
+    boardGroup.add(rail)
+  }
   const trim = new THREE.Mesh(
     new THREE.BoxGeometry(8.39, 0.035, 8.39),
-    new THREE.MeshStandardMaterial({ color: 0x9a804a, roughness: 0.3, metalness: 0.6 }),
+    new THREE.MeshStandardMaterial({ color: 0xb69a68, roughness: 0.28, metalness: 0.62 }),
   )
   trim.position.set(0, -0.095, 0)
   boardGroup.add(trim)
@@ -664,118 +708,153 @@ function createBoard() {
 }
 createBoard()
 
+// Coordenadas discretas na moldura ajudam a localizar casas sem poluir o tabuleiro.
+function createCoordinateSprite(label, x, z, isLightEdge) {
+  const canvas = document.createElement('canvas')
+  canvas.width = 128
+  canvas.height = 128
+  const ctx = canvas.getContext('2d')
+  ctx.clearRect(0, 0, 128, 128)
+  ctx.font = '600 54px DM Sans, Arial, sans-serif'
+  ctx.textAlign = 'center'
+  ctx.textBaseline = 'middle'
+  ctx.fillStyle = isLightEdge ? '#e4d4b6' : '#a99570'
+  ctx.fillText(label, 64, 66)
+  const texture = new THREE.CanvasTexture(canvas)
+  texture.colorSpace = THREE.SRGBColorSpace
+  const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: texture, transparent: true, depthWrite: false }))
+  sprite.position.set(x, 0.057, z)
+  sprite.scale.set(0.19, 0.19, 1)
+  sprite.userData.isCoordinate = true
+  coordinateGroup.add(sprite)
+}
+for (let col = 0; col < 8; col++) {
+  const file = String.fromCharCode(97 + col)
+  createCoordinateSprite(file, col - 3.5, -4.12, col % 2 === 0)
+  createCoordinateSprite(file, col - 3.5, 4.12, col % 2 !== 0)
+}
+for (let rank = 1; rank <= 8; rank++) {
+  createCoordinateSprite(String(rank), -4.12, 4.5 - rank, rank % 2 === 0)
+  createCoordinateSprite(String(rank), 4.12, 4.5 - rank, rank % 2 !== 0)
+}
+
 // ======================================================
 // 7. PEÇAS 3D
 // ======================================================
 
 const pieceGroup = new THREE.Group()
 scene.add(pieceGroup)
-const whiteMaterial = new THREE.MeshStandardMaterial({ color: 0xf7f0df, roughness: 0.29, metalness: 0.08 })
-const blackMaterial = new THREE.MeshStandardMaterial({ color: 0x202b29, roughness: 0.27, metalness: 0.18 })
-const pieceBaseGeometry = new THREE.CylinderGeometry(0.3, 0.35, 0.12, 32)
+const whiteMaterial = new THREE.MeshStandardMaterial({ color: 0xe9dfca, roughness: 0.31, metalness: 0.025 })
+const blackMaterial = new THREE.MeshStandardMaterial({ color: 0x20201f, roughness: 0.28, metalness: 0.12 })
+const pieceBaseGeometry = new THREE.CylinderGeometry(0.3, 0.35, 0.12, 40)
 const pieceStemGeometry = new THREE.CylinderGeometry(0.12, 0.22, 0.35, 24)
 
 function createPieceMesh(type, color, square) {
   const material = color === 'w' ? whiteMaterial : blackMaterial
   const piece = new THREE.Group()
-
-  // Pequenos detalhes metálicos ajudam a separar visualmente cada peça.
   const detailMaterial = new THREE.MeshStandardMaterial({
-    color: color === 'w' ? 0xd9bd7a : 0x8d7441,
-    metalness: 0.55,
+    color: color === 'w' ? 0xb79a62 : 0x8c744c,
+    metalness: 0.62,
+    roughness: 0.28,
+  })
+  const shadowMaterial = new THREE.MeshStandardMaterial({
+    color: color === 'w' ? 0xd4c3a4 : 0x303030,
     roughness: 0.32,
+    metalness: 0.12,
   })
 
-  function addMesh(geometry, y, x = 0, z = 0, mat = material) {
+  function addMesh(geometry, y = 0, x = 0, z = 0, mat = material, rotation = null) {
     const mesh = new THREE.Mesh(geometry, mat)
     mesh.position.set(x, y, z)
+    if (rotation) mesh.rotation.set(rotation.x || 0, rotation.y || 0, rotation.z || 0)
     mesh.castShadow = true
     mesh.receiveShadow = true
     piece.add(mesh)
     return mesh
   }
+  function lathe(points, mat = material, segments = 32) {
+    const geometry = new THREE.LatheGeometry(points.map(([r, y]) => new THREE.Vector2(r, y)), segments)
+    return addMesh(geometry, 0, 0, 0, mat)
+  }
+  function ring(radius, tube, y, mat = detailMaterial) {
+    return addMesh(new THREE.TorusGeometry(radius, tube, 10, 36), y, 0, 0, mat, { x: Math.PI / 2 })
+  }
 
-  // Base comum, com dois níveis para dar aparência de peça torneada.
-  addMesh(new THREE.CylinderGeometry(0.29, 0.34, 0.10, 32), 0.16)
-  addMesh(new THREE.CylinderGeometry(0.25, 0.29, 0.07, 32), 0.245, 0, 0, detailMaterial)
+  // Base torneada em três níveis, semelhante a um conjunto de xadrez esculpido.
+  addMesh(new THREE.CylinderGeometry(0.30, 0.345, 0.12, 40), 0.16)
+  addMesh(new THREE.CylinderGeometry(0.265, 0.30, 0.075, 40), 0.255, 0, 0, detailMaterial)
+  addMesh(new THREE.CylinderGeometry(0.235, 0.265, 0.055, 40), 0.32, 0, 0, material)
+  ring(0.287, 0.018, 0.205)
 
   switch (type) {
-    case 'p': { // Peão: corpo curto e cabeça redonda bem evidente.
-      addMesh(new THREE.CylinderGeometry(0.105, 0.17, 0.28, 24), 0.41)
-      addMesh(new THREE.SphereGeometry(0.145, 24, 18), 0.62)
-      addMesh(new THREE.TorusGeometry(0.115, 0.018, 8, 24), 0.31, 0, 0, detailMaterial)
+    case 'p': { // Peão: haste estreita e cabeça esférica destacada.
+      lathe([[0.16,.34],[.18,.37],[.16,.41],[.12,.47],[.105,.54],[.12,.59],[.16,.62],[.17,.65],[.13,.68],[.08,.70],[.02,.705]])
+      addMesh(new THREE.SphereGeometry(0.135, 32, 24), 0.79)
+      ring(0.12, 0.012, 0.655, detailMaterial)
       break
     }
-
-    case 'r': { // Torre: formato de fortaleza e ameias quadradas.
-      addMesh(new THREE.CylinderGeometry(0.17, 0.21, 0.37, 20), 0.47)
-      addMesh(new THREE.CylinderGeometry(0.235, 0.235, 0.10, 24), 0.70)
-      addMesh(new THREE.CylinderGeometry(0.17, 0.17, 0.08, 24), 0.79, 0, 0, detailMaterial)
-      for (let i = 0; i < 6; i++) {
-        const angle = (i / 6) * Math.PI * 2
-        addMesh(new THREE.BoxGeometry(0.105, 0.12, 0.105), 0.86, Math.cos(angle) * 0.17, Math.sin(angle) * 0.17)
+    case 'r': { // Torre: bloco vertical, gola e ameias grandes claramente quadradas.
+      lathe([[.18,.34],[.205,.39],[.20,.43],[.175,.47],[.175,.78],[.205,.81],[.23,.84],[.23,.91],[.17,.91],[.17,.86],[.145,.86],[.145,.92]])
+      addMesh(new THREE.CylinderGeometry(.225,.225,.055,32), .855, 0, 0, detailMaterial)
+      for (let i=0;i<6;i++) {
+        const a=(i/6)*Math.PI*2
+        addMesh(new THREE.BoxGeometry(.115,.15,.115), .965, Math.cos(a)*.16, Math.sin(a)*.16)
       }
       break
     }
-
-    case 'n': { // Cavalo: silhueta de cabeça, focinho, orelha e olho.
+    case 'n': { // Cavalo com pescoço inclinado e cabeça equina em relevo.
+      // Pescoço e crina criam o volume tridimensional antes da silhueta da cabeça.
+      addMesh(new THREE.CylinderGeometry(.105,.17,.43,24), .54, -.015, 0, material, {x:0,z:-.42})
+      addMesh(new THREE.SphereGeometry(.145,24,18), .68, -.04, 0, material)
       const horseShape = new THREE.Shape()
-      horseShape.moveTo(-0.17, 0.27)
-      horseShape.lineTo(-0.18, 0.47)
-      horseShape.lineTo(-0.08, 0.62)
-      horseShape.lineTo(-0.11, 0.84)
-      horseShape.lineTo(0.02, 0.76)
-      horseShape.lineTo(0.10, 0.64)
-      horseShape.lineTo(0.21, 0.59)
-      horseShape.lineTo(0.25, 0.49)
-      horseShape.lineTo(0.15, 0.43)
-      horseShape.lineTo(0.04, 0.45)
-      horseShape.lineTo(0.00, 0.27)
+      horseShape.moveTo(-.16,.49)
+      horseShape.lineTo(-.17,.70)
+      horseShape.lineTo(-.10,.83)
+      horseShape.lineTo(-.13,1.02)
+      horseShape.lineTo(-.055,.96)
+      horseShape.lineTo(.015,.86)
+      horseShape.lineTo(.13,.82)
+      horseShape.lineTo(.22,.74)
+      horseShape.lineTo(.20,.68)
+      horseShape.lineTo(.10,.66)
+      horseShape.lineTo(.035,.70)
+      horseShape.lineTo(.01,.50)
       horseShape.closePath()
-      const horseGeometry = new THREE.ExtrudeGeometry(horseShape, {
-        depth: 0.13,
-        bevelEnabled: true,
-        bevelSegments: 2,
-        steps: 1,
-        bevelSize: 0.025,
-        bevelThickness: 0.025,
-      })
-      horseGeometry.center()
-      const horse = addMesh(horseGeometry, 0.69, 0, 0)
-      horse.rotation.y = -Math.PI / 2
-      // O olho fica na face frontal da cabeça.
-      addMesh(new THREE.SphereGeometry(0.028, 12, 10), 0.80, 0.085, 0.105, detailMaterial)
-      addMesh(new THREE.ConeGeometry(0.055, 0.15, 4), 0.99, -0.065, 0, material)
+      const horseGeometry = new THREE.ExtrudeGeometry(horseShape, {depth:.16,bevelEnabled:true,bevelSegments:3,steps:1,bevelSize:.025,bevelThickness:.025,curveSegments:8})
+      const horse = addMesh(horseGeometry, 0, 0, -.08, material)
+      // Olho e narina posicionados na face visível do cavalo.
+      addMesh(new THREE.SphereGeometry(.025,14,10), .77, .105, .105, detailMaterial)
+      addMesh(new THREE.SphereGeometry(.018,12,8), .685, .19, .105, detailMaterial)
+      // Crina estilizada em pequenos relevos no topo do pescoço.
+      for (let i=0;i<3;i++) addMesh(new THREE.ConeGeometry(.035,.12,8), .86-i*.09, -.10+i*.025, -.005, shadowMaterial, {x:0,z:-.38})
       break
     }
-
-    case 'b': { // Bispo: corpo alto, mitra e corte diagonal característico.
-      addMesh(new THREE.CylinderGeometry(0.105, 0.19, 0.40, 24), 0.47)
-      addMesh(new THREE.SphereGeometry(0.13, 24, 16), 0.71)
-      addMesh(new THREE.ConeGeometry(0.16, 0.30, 24), 0.88)
-      const slit = addMesh(new THREE.BoxGeometry(0.035, 0.20, 0.045), 0.88, 0.015, 0.125, detailMaterial)
-      slit.rotation.z = -0.45
+    case 'b': { // Bispo: corpo torneado, mitra pontiaguda e fenda diagonal.
+      lathe([[.16,.34],[.19,.39],[.16,.44],[.12,.52],[.105,.64],[.13,.70],[.17,.74],[.15,.78],[.10,.81],[.07,.84]])
+      addMesh(new THREE.SphereGeometry(.115,28,20), .77)
+      addMesh(new THREE.ConeGeometry(.145,.29,32), .94, 0, 0, material)
+      addMesh(new THREE.SphereGeometry(.025,16,12), 1.09, 0, 0, detailMaterial)
+      const slit = addMesh(new THREE.BoxGeometry(.035,.20,.045), .91, .015, .125, detailMaterial, {x:0,z:-.48})
       break
     }
-
-    case 'q': { // Rainha: coroa larga com cinco pontas.
-      addMesh(new THREE.CylinderGeometry(0.12, 0.20, 0.43, 24), 0.49)
-      addMesh(new THREE.SphereGeometry(0.16, 24, 16), 0.74)
-      addMesh(new THREE.CylinderGeometry(0.22, 0.18, 0.08, 24), 0.83, 0, 0, detailMaterial)
-      for (let i = 0; i < 5; i++) {
-        const angle = (i / 5) * Math.PI * 2
-        addMesh(new THREE.ConeGeometry(0.055, 0.20, 12), 0.94, Math.cos(angle) * 0.16, Math.sin(angle) * 0.16)
+    case 'q': { // Rainha: corpo elegante e coroa com pontas e joias.
+      lathe([[.17,.34],[.20,.39],[.16,.44],[.12,.51],[.105,.63],[.13,.70],[.18,.75],[.20,.79],[.23,.82],[.23,.87],[.18,.88],[.15,.84]])
+      ring(.19,.014,.81,detailMaterial)
+      for (let i=0;i<7;i++) {
+        const a=(i/7)*Math.PI*2
+        const x=Math.cos(a)*.17, z=Math.sin(a)*.17
+        addMesh(new THREE.ConeGeometry(.045,.19,12), .955, x, z, detailMaterial)
+        addMesh(new THREE.SphereGeometry(.025,12,10), .91, x, z, material)
       }
-      addMesh(new THREE.SphereGeometry(0.065, 16, 12), 1.055, 0, 0, detailMaterial)
+      addMesh(new THREE.SphereGeometry(.075,20,16), 1.02, 0, 0, detailMaterial)
       break
     }
-
-    case 'k': { // Rei: corpo alto e cruz claramente reconhecível.
-      addMesh(new THREE.CylinderGeometry(0.13, 0.21, 0.48, 24), 0.51)
-      addMesh(new THREE.SphereGeometry(0.15, 24, 16), 0.79)
-      addMesh(new THREE.CylinderGeometry(0.19, 0.16, 0.08, 24), 0.89, 0, 0, detailMaterial)
-      addMesh(new THREE.BoxGeometry(0.065, 0.27, 0.065), 1.055)
-      addMesh(new THREE.BoxGeometry(0.20, 0.065, 0.065), 1.09)
+    case 'k': { // Rei: corpo mais alto, gola e cruz tridimensional.
+      lathe([[.17,.34],[.21,.39],[.17,.44],[.13,.53],[.12,.68],[.15,.75],[.19,.79],[.20,.83],[.16,.87],[.12,.90],[.11,.94],[.07,.96]])
+      ring(.18,.016,.82,detailMaterial)
+      addMesh(new THREE.SphereGeometry(.07,20,16), .98, 0, 0, detailMaterial)
+      addMesh(new THREE.BoxGeometry(.075,.30,.075), 1.12, 0, 0, detailMaterial)
+      addMesh(new THREE.BoxGeometry(.23,.075,.075), 1.145, 0, 0, detailMaterial)
       break
     }
   }
@@ -843,11 +922,11 @@ function renderPieces() {
 
 const highlightGroup = new THREE.Group()
 scene.add(highlightGroup)
-const moveHighlightMaterial = new THREE.MeshBasicMaterial({ color: 0x8ab99a, transparent: true, opacity: 0.42, depthWrite: false })
-const selectedMaterial = new THREE.MeshBasicMaterial({ color: 0xd8bd7c, transparent: true, opacity: 0.58, depthWrite: false })
-const lastMoveFromMaterial = new THREE.MeshBasicMaterial({ color: 0x9fba83, transparent: true, opacity: 0.38, depthWrite: false })
-const lastMoveToMaterial = new THREE.MeshBasicMaterial({ color: 0xd8bd7c, transparent: true, opacity: 0.58, depthWrite: false })
-const checkMaterial = new THREE.MeshBasicMaterial({ color: 0xc95e54, transparent: true, opacity: 0.7, depthWrite: false })
+const moveHighlightMaterial = new THREE.MeshBasicMaterial({ color: 0xd9c49b, transparent: true, opacity: 0.85, depthWrite: false })
+const selectedMaterial = new THREE.MeshBasicMaterial({ color: 0xc7a66b, transparent: true, opacity: 0.48, depthWrite: false })
+const lastMoveFromMaterial = new THREE.MeshBasicMaterial({ color: 0x9d8c6c, transparent: true, opacity: 0.30, depthWrite: false })
+const lastMoveToMaterial = new THREE.MeshBasicMaterial({ color: 0xc7a66b, transparent: true, opacity: 0.43, depthWrite: false })
+const checkMaterial = new THREE.MeshBasicMaterial({ color: 0xb94d43, transparent: true, opacity: 0.72, depthWrite: false })
 const highlightGeometry = new THREE.BoxGeometry(0.88, 0.025, 0.88)
 
 function clearHighlights() {
@@ -870,6 +949,28 @@ function drawLastMoveHighlights() {
   addHighlight(lastMove.to, lastMoveToMaterial, 'last-to')
 }
 
+function addLegalMoveMarker(square, isCapture = false) {
+  const position = squareToPosition(square)
+  let marker
+  if (isCapture) {
+    marker = new THREE.Mesh(
+      new THREE.TorusGeometry(0.34, 0.035, 8, 32),
+      new THREE.MeshBasicMaterial({ color: 0xd9c49b, transparent: true, opacity: 0.9, depthWrite: false }),
+    )
+    marker.rotation.x = Math.PI / 2
+    marker.position.set(position.x, 0.126, position.z)
+  } else {
+    marker = new THREE.Mesh(
+      new THREE.CircleGeometry(0.105, 24),
+      moveHighlightMaterial,
+    )
+    marker.rotation.x = -Math.PI / 2
+    marker.position.set(position.x, 0.127, position.z)
+  }
+  marker.userData = { square, kind: 'move' }
+  highlightGroup.add(marker)
+}
+
 function refreshHighlights() {
   clearHighlights()
   drawLastMoveHighlights()
@@ -887,7 +988,7 @@ function refreshHighlights() {
   if (!selectedSquare) return
   addHighlight(selectedSquare, selectedMaterial, 'selected')
   for (const move of game.moves({ square: selectedSquare, verbose: true })) {
-    addHighlight(move.to, moveHighlightMaterial, 'move')
+    addLegalMoveMarker(move.to, Boolean(move.captured))
   }
 }
 
@@ -1225,8 +1326,8 @@ function findPieceHit() {
 
 function findSquareHit() {
   const hits = raycaster.intersectObjects(boardGroup.children, false)
-  if (hits.length === 0) return null
-  return hits[0].object.userData.square || null
+  const squareHit = hits.find((hit) => hit.object.userData.square)
+  return squareHit ? squareHit.object.userData.square : null
 }
 
 function handleBoardClick(event) {
@@ -1270,6 +1371,13 @@ function handleBoardClick(event) {
   refreshHighlights()
 }
 renderer.domElement.addEventListener('pointerdown', handleBoardClick)
+renderer.domElement.addEventListener('pointermove', (event) => {
+  updatePointer(event)
+  const pieceHit = findPieceHit()
+  const squareHit = findSquareHit()
+  renderer.domElement.style.cursor = pieceHit || squareHit ? 'pointer' : 'default'
+})
+renderer.domElement.addEventListener('contextmenu', (event) => event.preventDefault())
 
 // ======================================================
 // 13. BOTÕES DO TOPO
@@ -1372,5 +1480,8 @@ window.addEventListener('resize', () => {
   camera.aspect = window.innerWidth / window.innerHeight
   camera.updateProjectionMatrix()
   renderer.setSize(window.innerWidth, window.innerHeight)
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, highQuality ? 2 : 1))
+  const narrow = window.innerWidth < 760
+  camera.position.set(narrow ? 8.8 : 7.7, narrow ? 11.1 : 9.6, narrow ? 12.1 : 10.8)
+  camera.lookAt(0, 0, 0)
 })

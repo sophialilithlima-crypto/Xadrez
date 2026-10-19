@@ -43,6 +43,6 @@ Como o repositório esperado é `Xadrez`, o Vite está configurado com `base: '/
 
 Os níveis usam estratégias progressivamente mais cuidadosas, com busca e avaliação material/posicional nos níveis superiores. Isso é uma IA simples de jogo, não um motor profissional como Stockfish.
 
-## Atualização visual
+## Direção visual e experiência
 
-Esta versão inclui tema verde-floresta/marfim/dourado, melhorias visuais no tabuleiro e nos painéis, animação de movimento, sons opcionais, destaque de xeque e última jogada, histórico reorganizado, rotação do tabuleiro e alternância de qualidade gráfica. Consulte `MELHORIAS-DE-DESIGN.txt` para ver as mudanças e as instruções de execução.
+A interface usa preto-carvão, bege quente e dourado envelhecido. O tabuleiro ganhou moldura em camadas, coordenadas, piso para sombras e iluminação de preenchimento. Os movimentos legais são marcados com pontos e as capturas com anéis, reduzindo a obstrução das casas. A interface foi refinada para desktop e telas menores. Consulte `MELHORIAS-DE-DESIGN.txt` para detalhes.
